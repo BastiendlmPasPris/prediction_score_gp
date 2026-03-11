@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="16dp">
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Administration" android:textColor="@color/f1_red"
+            android:textSize="22sp" android:textStyle="bold" android:layout_marginBottom="24dp"/>
+
+        <!-- Bouton Entraîner -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTrain"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Relancer l'entraînement"
+            android:backgroundTint="@color/f1_red"
+            android:layout_marginBottom="8dp"/>
+
+        <ProgressBar android:id="@+id/progressTrain"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:visibility="gone" android:layout_marginBottom="24dp"/>
+
+        <!-- Cards métriques -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Métriques du modèle" android:textColor="@color/white"
+            android:textSize="16sp" android:textStyle="bold" android:layout_marginBottom="12dp"/>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="16dp">
+            <!-- TODO: 4 cards (accuracy, precision, recall, f1-score) -->
+            <androidx.cardview.widget.CardView android:layout_width="0dp"
+                android:layout_height="80dp" android:layout_weight="1" android:layout_margin="4dp"
+                app:cardBackgroundColor="@color/dark_gray" app:cardCornerRadius="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:orientation="vertical" android:gravity="center">
+                    <TextView android:id="@+id/tvAccuracy"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textColor="@color/white" android:textSize="18sp" android:textStyle="bold"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Accuracy" android:textColor="@color/gray" android:textSize="11sp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+            <androidx.cardview.widget.CardView android:layout_width="0dp"
+                android:layout_height="80dp" android:layout_weight="1" android:layout_margin="4dp"
+                app:cardBackgroundColor="@color/dark_gray" app:cardCornerRadius="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:orientation="vertical" android:gravity="center">
+                    <TextView android:id="@+id/tvF1Score"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textColor="@color/white" android:textSize="18sp" android:textStyle="bold"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="F1-Score" android:textColor="@color/gray" android:textSize="11sp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <!-- Sélecteur version modèle + rollback -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Version du modèle" android:textColor="@color/white"
+            android:textSize="16sp" android:textStyle="bold" android:layout_marginBottom="8dp"/>
+
+        <Spinner android:id="@+id/spinnerVersion"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRollback"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Rollback vers cette version"
+            android:backgroundTint="@color/dark_gray"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Logs API -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Logs récents" android:textColor="@color/white"
+            android:textSize="16sp" android:textStyle="bold" android:layout_marginBottom="8dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvLogs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+</ScrollView>

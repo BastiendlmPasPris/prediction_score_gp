@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(BASE=\"C:/Users/basti/AndroidStudioProjects/prediction_score_gp/app/src/main/java/com/example/prediction_score_gp\")",
+      "Bash(__NEW_LINE_3caca708d5f334a4__ mkdir -p \"$BASE/ui/auth\" \"$BASE/ui/dashboard\" \"$BASE/ui/prediction\" \"$BASE/ui/standings\" \"$BASE/ui/stats\" \"$BASE/ui/profile\" \"$BASE/ui/admin\" \"$BASE/data/api\" \"$BASE/data/model\" \"$BASE/data/repository\" \"$BASE/viewmodel\" \"$BASE/navigation\")",
+      "Bash(__NEW_LINE_3caca708d5f334a4__ echo \"Dossiers Android créés.\")"
+    ]
+  }
+}

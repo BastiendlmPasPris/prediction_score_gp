@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+
+  # ─── Base de données PostgreSQL (production) ──────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: f1predict-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: f1predict
+      POSTGRES_PASSWORD: f1predict_pass
+      POSTGRES_DB: f1predict
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # ─── API FastAPI ──────────────────────────────────────────────
+  api:
+    build: ./api
+    container_name: f1predict-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://f1predict:f1predict_pass@db:5432/f1predict
+      JWT_SECRET: ${JWT_SECRET:-f1predict_secret_change_in_prod}
+      ML_MODELS_PATH: /ml/models/versions
+    volumes:
+      - ./ml/models:/ml/models     # partage les modèles avec le service ML
+    depends_on:
+      - db
+
+  # ─── Service ML ───────────────────────────────────────────────
+  ml:
+    build: ./ml
+    container_name: f1predict-ml
+    restart: "no"                  # Tâche ponctuelle, ne redémarre pas automatiquement
+    volumes:
+      - ./ml/data:/ml/data         # données CSV Kaggle
+      - ./ml/models:/ml/models     # modèles partagés avec l'API
+    environment:
+      PYTHONPATH: /
+
+volumes:
+  postgres_data:

@@ -1,4 +1,5 @@
 # F1 Predict
+[![CI - F1 Predict](https://github.com/BastiendlmPasPris/prediction_score_gp/actions/workflows/ci.yml/badge.svg)](https://github.com/BastiendlmPasPris/prediction_score_gp/actions/workflows/ci.yml)
 
 Application Android de prédiction de résultats de Formule 1 — Projet DevOps Mobile, Le Mans Université S2 2026.
 

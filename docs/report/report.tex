@@ -1,0 +1,472 @@
+%---------------------------------------------------------------
+% F1 Predict — Rapport de projet
+% Le Mans Université — Projet DevOps Mobile, S2 2026
+%---------------------------------------------------------------
+
+\documentclass[12pt, a4paper]{article}
+
+% ── Encodage & langue ──────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+% ── Mise en page ───────────────────────────────────────────────
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+% ── Typographie ────────────────────────────────────────────────
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ── Couleurs & graphiques ──────────────────────────────────────
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+
+% Couleur rouge F1
+\definecolor{f1red}{RGB}{225, 6, 0}
+\definecolor{darkgray}{RGB}{50, 50, 50}
+\definecolor{lightgray}{RGB}{245, 245, 245}
+
+% ── Tableaux ───────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+
+% ── Code source ────────────────────────────────────────────────
+\usepackage{listings}
+\lstset{
+    backgroundcolor=\color{lightgray},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{darkgray},
+    commentstyle=\color{gray},
+    keywordstyle=\color{f1red}\bfseries,
+    stringstyle=\color{teal},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    tabsize=4,
+    showstringspaces=false
+}
+
+% ── Liens & PDF ────────────────────────────────────────────────
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=f1red,
+    urlcolor=f1red,
+    citecolor=darkgray,
+    pdftitle={F1 Predict - Rapport de projet},
+    pdfauthor={Le Mans Université}
+}
+
+% ── En-têtes et pieds de page ──────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{f1red}{\textbf{F1 Predict}}}
+\fancyhead[R]{\textcolor{darkgray}{\small Projet DevOps Mobile — S2 2026}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{f1red}\leaders\hrule height \headrulewidth\hfill}}
+
+% ── Table des matières ─────────────────────────────────────────
+\usepackage{tocloft}
+\renewcommand{\cftsecfont}{\bfseries}
+\renewcommand{\cftsecpagefont}{\bfseries}
+
+%---------------------------------------------------------------
+\begin{document}
+
+%---------------------------------------------------------------
+% Page de titre
+%---------------------------------------------------------------
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+
+    {\color{f1red}\rule{\linewidth}{1.5pt}}
+    \vspace{0.5cm}
+
+    {\Huge \textbf{F1 Predict}}\\[0.4cm]
+    {\Large Application Android de prédiction de résultats de Formule 1}
+
+    \vspace{0.5cm}
+    {\color{f1red}\rule{\linewidth}{1.5pt}}
+
+    \vspace{2cm}
+
+    {\large \textbf{Rapport de projet}}\\[0.3cm]
+    {\large Projet DevOps Mobile}\\[0.3cm]
+    {\large Le Mans Université — Semestre 2, 2026}
+
+    \vspace{2.5cm}
+
+    \begin{tabular}{ll}
+        \textbf{P1} & Front-end Android \\[0.2cm]
+        \textbf{P2} & API REST \\[0.2cm]
+        \textbf{P3} & Machine Learning \\[0.2cm]
+        \textbf{P4} & DevOps \& Documentation \\
+    \end{tabular}
+
+    \vfill
+
+    {\large \today}
+\end{titlepage}
+
+%---------------------------------------------------------------
+% Table des matières
+%---------------------------------------------------------------
+\newpage
+\tableofcontents
+\newpage
+
+%---------------------------------------------------------------
+% 1. Introduction
+%---------------------------------------------------------------
+\section{Introduction}
+
+\subsection{Contexte et problématique}
+
+La Formule 1 est l'une des compétitions sportives les plus analysées au monde. Chaque Grand Prix génère une quantité considérable de données : positions de départ, historiques des pilotes, caractéristiques des circuits, météo, etc. Ces données, accumulées depuis 1950, représentent un terrain fertile pour l'application de techniques de Machine Learning.
+
+La problématique de ce projet est la suivante : \textbf{est-il possible de prédire avec une précision satisfaisante si un pilote montera sur le podium lors d'un Grand Prix, à partir de données historiques ?}
+
+\subsection{Objectifs du projet}
+
+Ce projet a pour objectifs de :
+\begin{itemize}
+    \item Construire un pipeline de Machine Learning complet, de la donnée brute au modèle déployé ;
+    \item Exposer ce modèle via une API REST sécurisée ;
+    \item Développer une application Android permettant à un utilisateur de lancer des prédictions ;
+    \item Mettre en place une infrastructure DevOps complète (Docker, CI/CD, tests automatisés).
+\end{itemize}
+
+\subsection{Dataset}
+
+Les données utilisées proviennent du dataset \textit{Formula 1 World Championship (1950–2020)} disponible sur Kaggle\footnote{\url{https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020}}. Il contient 14 fichiers CSV couvrant les résultats de course, les qualifications, les pilotes, les écuries, les circuits et les arrêts aux stands.
+
+%---------------------------------------------------------------
+% 2. Architecture générale
+%---------------------------------------------------------------
+\section{Architecture générale}
+
+\subsection{Vue d'ensemble}
+
+Le projet est organisé en quatre couches indépendantes et communicantes :
+
+\begin{center}
+\begin{tabular}{ccc}
+    \textbf{Application Android} & $\longleftrightarrow$ & \textbf{API REST} \\
+    & & $\updownarrow$ \\
+    & & \textbf{Modèle ML} \\
+    & & $\updownarrow$ \\
+    & & \textbf{Base de données} \\
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+
+\subsection{Stack technique}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Composant} & \textbf{Technologies} \\
+\midrule
+Application Android & Java, XML, Retrofit, Material Design 3, pattern MVVM \\
+API REST            & Python 3.11, FastAPI, SQLAlchemy, JWT (python-jose), Pydantic \\
+Machine Learning    & scikit-learn, pandas, numpy, joblib \\
+Base de données     & SQLite (développement) / PostgreSQL 16 (production) \\
+DevOps              & Docker, Docker Compose, GitHub Actions, pytest \\
+\bottomrule
+\end{tabularx}
+\caption{Stack technique du projet}
+\end{table}
+
+\subsection{Infrastructure DevOps}
+
+L'infrastructure repose sur deux outils principaux :
+
+\textbf{Docker} : chaque service (API, base de données, ML) tourne dans un conteneur isolé orchestré par \texttt{docker-compose}. Cela garantit la reproductibilité de l'environnement sur toutes les machines.
+
+\textbf{GitHub Actions} : un pipeline CI/CD se déclenche automatiquement à chaque \textit{push} sur les branches \texttt{master} et \texttt{develop}. Il exécute quatre jobs : les tests pytest, le lint flake8, et la compilation des images Docker API et ML.
+
+%---------------------------------------------------------------
+% 3. Machine Learning
+%---------------------------------------------------------------
+\section{Pipeline Machine Learning}
+
+\subsection{Chargement et préparation des données}
+
+Le module \texttt{ml/preprocessing/loader.py} charge les 14 fichiers CSV du dataset Kaggle et les fusionne en un seul DataFrame via des jointures sur les identifiants de course, de pilote et d'écurie.
+
+\subsection{Feature Engineering}
+
+La qualité du modèle dépend directement de la pertinence des variables construites. Le module \texttt{features.py} calcule les features suivantes :
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Feature} & \textbf{Description} \\
+\midrule
+\texttt{grid\_position}          & Position de départ en grille de qualification \\
+\texttt{driver\_age}             & Âge du pilote au moment de la course \\
+\texttt{dnf\_rate\_last10}       & Taux d'abandon sur les 10 dernières courses \\
+\texttt{podiums\_last5}          & Nombre de podiums sur les 5 dernières courses \\
+\texttt{circuit\_history\_avg}   & Position moyenne du pilote sur ce circuit \\
+\texttt{home\_race}              & Indicateur binaire : course dans le pays d'origine du pilote \\
+\bottomrule
+\end{tabularx}
+\caption{Features utilisées par le modèle}
+\end{table}
+
+La \textbf{variable cible} (\texttt{y}) est binaire : \texttt{1} si le pilote finit dans le top 3 (podium), \texttt{0} sinon. Environ 15\% des observations sont des podiums, reflétant la réalité (3 podiums pour 20 pilotes par course).
+
+\subsection{AutoML — Sélection du modèle}
+
+Le module \texttt{ml/automl/automl.py} entraîne et compare automatiquement cinq algorithmes de classification :
+
+\begin{itemize}
+    \item Random Forest
+    \item Gradient Boosting
+    \item Support Vector Machine (SVM)
+    \item Régression Logistique
+    \item K-Nearest Neighbors (KNN)
+\end{itemize}
+
+Chaque modèle est évalué par validation croisée (5 folds). Le modèle obtenant le meilleur score F1 est automatiquement sélectionné et sauvegardé.
+
+\subsection{Évaluation}
+
+Les métriques calculées après chaque entraînement sont :
+
+\begin{itemize}
+    \item \textbf{Accuracy} : proportion de prédictions correctes
+    \item \textbf{Score F1} : moyenne harmonique de la précision et du rappel
+    \item \textbf{AUC-ROC} : aire sous la courbe ROC
+    \item \textbf{Matrice de confusion} : distribution des vrais/faux positifs et négatifs
+\end{itemize}
+
+% ── Placeholder graphique ──────────────────────────────────────
+% Décommenter et remplacer par la vraie courbe ROC une fois le modèle entraîné
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.6\textwidth]{roc_curve.png}
+%     \caption{Courbe ROC du meilleur modèle}
+% \end{figure}
+
+\subsection{Versioning du modèle}
+
+Chaque entraînement génère un fichier \texttt{.joblib} horodaté dans \texttt{ml/models/versions/}. L'API d'administration permet de consulter les versions disponibles et d'effectuer un \textit{rollback} vers une version antérieure si les performances d'un nouveau modèle sont dégradées.
+
+%---------------------------------------------------------------
+% 4. API REST
+%---------------------------------------------------------------
+\section{API REST}
+
+\subsection{Structure}
+
+L'API est développée avec \textbf{FastAPI} (Python 3.11) et suit une architecture en couches :
+
+\begin{itemize}
+    \item \textbf{Routers} : définissent les endpoints HTTP
+    \item \textbf{Schemas} : valident les données entrantes et sortantes (Pydantic)
+    \item \textbf{Models} : définissent les tables en base de données (SQLAlchemy)
+    \item \textbf{Core} : logique transversale (JWT, configuration)
+\end{itemize}
+
+\subsection{Endpoints principaux}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Méthode} & \textbf{Route} & \textbf{Description} \\
+\midrule
+POST & \texttt{/auth/register}         & Inscription d'un utilisateur \\
+POST & \texttt{/auth/login}            & Connexion, retourne un JWT \\
+GET  & \texttt{/auth/me}               & Profil de l'utilisateur connecté \\
+GET  & \texttt{/races}                 & Liste des Grands Prix \\
+GET  & \texttt{/drivers}               & Liste des pilotes \\
+POST & \texttt{/predict}               & Prédiction pour un pilote sur un GP \\
+POST & \texttt{/predict/race/\{id\}}   & Classement prédit complet d'un GP \\
+GET  & \texttt{/predictions/history}   & Historique des prédictions de l'utilisateur \\
+POST & \texttt{/admin/train}           & Relancer l'entraînement du modèle \\
+GET  & \texttt{/admin/eval}            & Consulter les métriques du modèle \\
+\bottomrule
+\end{tabularx}
+\caption{Endpoints principaux de l'API}
+\end{table}
+
+\subsection{Authentification}
+
+L'authentification repose sur les \textbf{JSON Web Tokens (JWT)}. À la connexion, l'API génère un token signé avec une clé secrète. Ce token est ensuite envoyé par le client dans le header \texttt{Authorization: Bearer <token>} à chaque requête protégée.
+
+\subsection{Base de données}
+
+Deux configurations sont supportées :
+\begin{itemize}
+    \item \textbf{SQLite} en développement : aucune configuration, fichier local \texttt{f1predict.db}
+    \item \textbf{PostgreSQL} en production via Docker : configuré dans \texttt{docker-compose.yml}
+\end{itemize}
+
+Les tables sont créées automatiquement au démarrage de l'API via \texttt{Base.metadata.create\_all()}.
+
+%---------------------------------------------------------------
+% 5. Application Android
+%---------------------------------------------------------------
+\section{Application Android}
+
+\subsection{Architecture MVVM}
+
+L'application suit le pattern \textbf{Model-View-ViewModel (MVVM)}, qui sépare clairement les responsabilités :
+
+\begin{itemize}
+    \item \textbf{View} (Activities + XML) : affichage et interactions utilisateur
+    \item \textbf{ViewModel} : logique métier, expose des \texttt{LiveData}
+    \item \textbf{Repository} : intermédiaire entre ViewModel et API
+    \item \textbf{Retrofit} : client HTTP pour les appels vers l'API REST
+\end{itemize}
+
+\subsection{Écrans principaux}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Écran} & \textbf{Fonctionnalité} \\
+\midrule
+LoginActivity / RegisterActivity & Authentification et création de compte \\
+DashboardActivity                & Écran d'accueil, prochain GP et compte à rebours \\
+PredictionActivity               & Sélection d'un GP et d'un pilote, résultat de la prédiction \\
+StandingsActivity                & Classement prédit complet d'un Grand Prix \\
+DriverStatsActivity              & Fiche détaillée d'un pilote avec graphique \\
+ProfileActivity                  & Profil et historique des prédictions \\
+AdminActivity                    & Interface d'administration du modèle ML \\
+\bottomrule
+\end{tabularx}
+\caption{Écrans de l'application Android}
+\end{table}
+
+%---------------------------------------------------------------
+% 6. DevOps
+%---------------------------------------------------------------
+\section{DevOps}
+
+\subsection{Docker}
+
+Chaque service du projet dispose d'un \texttt{Dockerfile} dédié. Le fichier \texttt{docker-compose.yml} orchestre trois services :
+
+\begin{itemize}
+    \item \textbf{db} : base de données PostgreSQL 16
+    \item \textbf{api} : serveur FastAPI exposé sur le port 8000
+    \item \textbf{ml} : service d'entraînement du modèle
+\end{itemize}
+
+Les services \texttt{api} et \texttt{ml} partagent un volume Docker pour les fichiers de modèles, permettant à l'API de charger le modèle entraîné par le service ML.
+
+\subsection{Pipeline CI/CD}
+
+Le fichier \texttt{.github/workflows/ci.yml} définit un pipeline automatique composé de quatre jobs :
+
+\begin{enumerate}
+    \item \textbf{test-api} : exécute \texttt{pytest tests/ -v} sur le code Python de l'API
+    \item \textbf{lint-python} : vérifie le style du code avec \texttt{flake8}
+    \item \textbf{build-docker-api} : compile l'image Docker de l'API (conditionné au succès des tests)
+    \item \textbf{build-docker-ml} : compile l'image Docker du service ML
+\end{enumerate}
+
+\subsection{Stratégie de branches}
+
+Le projet utilise une stratégie à trois niveaux :
+\begin{itemize}
+    \item \texttt{master} : code stable et validé, protégé par une règle de Pull Request obligatoire
+    \item \texttt{develop} : branche d'intégration continue
+    \item \texttt{feature/xxx} : une branche par fonctionnalité, fusionnée dans \texttt{develop} après revue de code
+\end{itemize}
+
+\subsection{Tests automatisés}
+
+Les tests couvrent les endpoints d'authentification, de prédiction et d'administration. Le fichier \texttt{conftest.py} met en place une base de données SQLite en mémoire isolée pour chaque session de test, garantissant l'indépendance des tests entre eux.
+
+%---------------------------------------------------------------
+% 7. Résultats
+%---------------------------------------------------------------
+\section{Résultats}
+
+\subsection{Métriques du modèle}
+
+% ── À compléter par P3 après entraînement ─────────────────────
+\begin{table}[H]
+\centering
+\begin{tabular}{lc}
+\toprule
+\textbf{Métrique} & \textbf{Valeur} \\
+\midrule
+Accuracy  & -- \\
+Score F1  & -- \\
+AUC-ROC   & -- \\
+\bottomrule
+\end{tabular}
+\caption{Métriques du meilleur modèle (à compléter)}
+\end{table}
+
+\subsection{Comparaison des modèles}
+
+% ── À compléter par P3 après entraînement ─────────────────────
+\begin{table}[H]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Modèle} & \textbf{Score F1} & \textbf{Sélectionné} \\
+\midrule
+Random Forest       & -- & \\
+Gradient Boosting   & -- & \\
+SVM                 & -- & \\
+Régression Logistique & -- & \\
+KNN                 & -- & \\
+\bottomrule
+\end{tabular}
+\caption{Comparaison des algorithmes (à compléter)}
+\end{table}
+
+%---------------------------------------------------------------
+% 8. Conclusion
+%---------------------------------------------------------------
+\section{Conclusion}
+
+Ce projet a permis de mettre en œuvre une chaîne complète de développement logiciel, depuis la collecte de données jusqu'au déploiement d'une application mobile, en passant par la conception d'un modèle de Machine Learning et d'une API REST.
+
+Les principaux apports techniques sont :
+\begin{itemize}
+    \item La maîtrise du cycle de vie d'un modèle ML (entraînement, évaluation, versioning, déploiement)
+    \item La mise en place d'une architecture microservices avec Docker
+    \item L'implémentation d'un pipeline CI/CD fonctionnel avec GitHub Actions
+    \item Le développement d'une application Android consommant une API REST authentifiée par JWT
+\end{itemize}
+
+Les perspectives d'amélioration incluent l'intégration de données météorologiques en temps réel, l'ajout de features liées aux arrêts aux stands, et l'extension du modèle à la prédiction du classement complet (régression ordinale).
+
+%---------------------------------------------------------------
+% Références
+%---------------------------------------------------------------
+\newpage
+\section*{Références}
+\addcontentsline{toc}{section}{Références}
+
+\begin{itemize}
+    \item Rohan Rao, \textit{Formula 1 World Championship (1950–2020)}, Kaggle, 2021.\\
+          \url{https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020}
+    \item FastAPI Documentation — \url{https://fastapi.tiangolo.com}
+    \item scikit-learn Documentation — \url{https://scikit-learn.org}
+    \item Android Developer Guide — \url{https://developer.android.com/guide}
+    \item Docker Documentation — \url{https://docs.docker.com}
+    \item GitHub Actions Documentation — \url{https://docs.github.com/actions}
+\end{itemize}
+
+\end{document}

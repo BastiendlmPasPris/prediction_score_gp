@@ -71,7 +71,20 @@
                     style="?android:attr/progressBarStyleHorizontal" />
                 <!-- TODO: Historique pilote sur ce circuit (RecyclerView) -->
             </LinearLayout>
+
+
         </androidx.cardview.widget.CardView>
+        <!-- Barre de navigation en bas -->
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNavigation"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom"
+            app:menu="@menu/bottom_nav_menu"
+            app:itemIconTint="@color/white"
+            app:itemTextColor="@color/white"
+            android:background="@color/dark_gray" />
 
     </LinearLayout>
+
 </ScrollView>

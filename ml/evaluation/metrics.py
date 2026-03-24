@@ -36,3 +36,23 @@ def load_metrics() -> dict:
         with open(METRICS_PATH, "r") as f:
             return json.load(f)
     return {}
+
+
+def print_report(metrics: dict = None):
+    """Affiche un bilan lisible des métriques en console."""
+    if metrics is None:
+        metrics = load_metrics()
+    if not metrics:
+        print("[Metrics] Aucune métrique disponible. Lancez d'abord ml/train.py")
+        return
+    print("=" * 42)
+    print(f"  Modèle    : {metrics.get('model_version', 'N/A')}")
+    print(f"  Accuracy  : {metrics.get('accuracy', 0):.2%}")
+    print(f"  F1-Score  : {metrics.get('f1_score', 0):.2%}")
+    print(f"  Precision : {metrics.get('precision', 0):.2%}")
+    print(f"  Recall    : {metrics.get('recall', 0):.2%}")
+    cm = metrics.get("confusion_matrix")
+    if cm:
+        print(f"  Confusion : TN={cm[0][0]}  FP={cm[0][1]}")
+        print(f"              FN={cm[1][0]}  TP={cm[1][1]}")
+    print("=" * 42)

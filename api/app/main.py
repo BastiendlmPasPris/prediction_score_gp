@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import auth, races, drivers, constructors, circuits, predict, admin
 from app.db.database import Base, engine
+from app.models import user, prediction_log  # noqa: F401 — nécessaire pour que SQLAlchemy enregistre les tables
 
 # Création des tables en base
 Base.metadata.create_all(bind=engine)

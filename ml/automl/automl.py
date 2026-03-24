@@ -14,19 +14,44 @@ from sklearn.pipeline import Pipeline
 
 
 MODELS = {
-    "RandomForest": RandomForestClassifier(n_estimators=100, random_state=42),
-    "GradientBoosting": GradientBoostingClassifier(n_estimators=100, random_state=42),
+    # class_weight="balanced" compense le déséquilibre ~85% non-podium / 15% podium
+    "RandomForest": RandomForestClassifier(
+        n_estimators=200,
+        max_depth=10,
+        min_samples_leaf=5,
+        class_weight="balanced",
+        random_state=42,
+        n_jobs=-1,
+    ),
+    "GradientBoosting": GradientBoostingClassifier(
+        n_estimators=150,
+        max_depth=5,
+        learning_rate=0.05,
+        subsample=0.8,
+        random_state=42,
+    ),
     "LogisticRegression": Pipeline([
         ("scaler", StandardScaler()),
-        ("clf", LogisticRegression(max_iter=1000, random_state=42))
+        ("clf", LogisticRegression(
+            max_iter=1000,
+            class_weight="balanced",
+            C=0.5,
+            random_state=42,
+        )),
     ]),
     "KNN": Pipeline([
         ("scaler", StandardScaler()),
-        ("clf", KNeighborsClassifier(n_neighbors=5))
+        ("clf", KNeighborsClassifier(n_neighbors=7, weights="distance")),
     ]),
     "SVM": Pipeline([
         ("scaler", StandardScaler()),
-        ("clf", SVC(probability=True, random_state=42))
+        ("clf", SVC(
+            probability=True,
+            class_weight="balanced",
+            C=1.0,
+            kernel="rbf",
+            random_state=42,
+        )),
     ]),
 }
 

@@ -55,8 +55,53 @@ def add_circuit_history_avg(df: pd.DataFrame) -> pd.DataFrame:
 
 def add_home_race(df: pd.DataFrame) -> pd.DataFrame:
     """Le pilote court-il dans son pays natal ? (0 ou 1)"""
-    # TODO: Joindre circuits.csv pour avoir la nationalité du circuit
-    df["home_race"] = 0
+    # Correspondance entre la nationalité Kaggle et le pays du circuit
+    nationality_to_country = {
+        "British": "UK",
+        "German": "Germany",
+        "Spanish": "Spain",
+        "Finnish": "Finland",
+        "French": "France",
+        "Italian": "Italy",
+        "Australian": "Australia",
+        "Dutch": "Netherlands",
+        "Mexican": "Mexico",
+        "Canadian": "Canada",
+        "Brazilian": "Brazil",
+        "Japanese": "Japan",
+        "American": "USA",
+        "Austrian": "Austria",
+        "Belgian": "Belgium",
+        "Danish": "Denmark",
+        "Thai": "Thailand",
+        "Monegasque": "Monaco",
+        "New Zealander": "New Zealand",
+        "Swiss": "Switzerland",
+        "Swedish": "Sweden",
+        "Colombian": "Colombia",
+        "Argentinian": "Argentina",
+        "Hungarian": "Hungary",
+        "Polish": "Poland",
+        "Russian": "Russia",
+        "Chinese": "China",
+        "Indian": "India",
+        "Singaporean": "Singapore",
+    }
+
+    # Charger circuits.csv si pas déjà dans le DataFrame
+    if "country" not in df.columns:
+        import os
+        circuits_path = os.path.join(os.path.dirname(__file__), "../data/raw/circuits.csv")
+        if os.path.exists(circuits_path):
+            circuits = pd.read_csv(circuits_path)[["circuitId", "country"]]
+            df = df.merge(circuits, on="circuitId", how="left")
+        else:
+            df["home_race"] = 0
+            return df
+
+    df["driver_country"] = df["nationality"].map(nationality_to_country)
+    df["home_race"] = (df["driver_country"] == df["country"]).astype(int)
+    df = df.drop(columns=["driver_country"], errors="ignore")
     return df
 
 

@@ -35,8 +35,19 @@ def decode_token(token: str) -> dict:
 def get_current_user(token: str = Depends(oauth2_scheme)):
     """Middleware : vérifie le JWT et retourne l'utilisateur"""
     payload = decode_token(token)
-    # TODO: Récupérer l'utilisateur depuis la BDD via payload["sub"]
-    return payload
+    from app.db.database import SessionLocal
+    from app.models.user import User
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == int(payload["sub"])).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Utilisateur introuvable",
+            )
+        return user
+    finally:
+        db.close()
 
 
 def get_current_admin(token: str = Depends(oauth2_scheme)):

@@ -7,6 +7,7 @@ package com.example.prediction_score_gp.ui.dashboard;
 // ─────────────────────────────────────────────────────────────────────────────
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -26,6 +27,9 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.prediction_score_gp.R;
+import com.example.prediction_score_gp.ui.prediction.PredictionActivity;
+import com.example.prediction_score_gp.ui.profile.ProfileActivity;
+import com.example.prediction_score_gp.ui.standings.StandingsActivity;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -43,6 +47,8 @@ public class DashboardActivity extends AppCompatActivity {
 
     private WebView globeWebView;
     private MaterialCardView cityCard;
+    private TextView raceInfoText; // NOUVEAU
+    private com.google.android.material.button.MaterialButton btnGoToPredict; // NOUVEAU
     private android.widget.TextView cityNameText;
     private SeekBar opacitySeekBar;
     private android.widget.TextView opacityValue;
@@ -84,6 +90,17 @@ public class DashboardActivity extends AppCompatActivity {
         registerBackHandler();
         setupOpacitySlider();
 
+        raceInfoText = findViewById(R.id.raceInfoText);
+        btnGoToPredict = findViewById(R.id.btnGoToPredict);
+        // Action du bouton Predict de la carte
+        btnGoToPredict.setOnClickListener(v -> {
+            Intent intent = new Intent(DashboardActivity.this, PredictionActivity.class);
+            // Optionnel : Passer le nom de la ville à la page de prédiction
+            intent.putExtra("SELECTED_CITY", cityNameText.getText().toString());
+            startActivity(intent);
+            overridePendingTransition(0, 0);
+        });
+
         // ── WindowInsets : status bar + nav bar ──────────────────
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
             Insets sysBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -120,32 +137,39 @@ public class DashboardActivity extends AppCompatActivity {
         int inactiveColor = Color.parseColor("#888888");
 
         int[][] tabs = {
-                {R.id.tabGlobe,   R.id.iconRaces,   R.id.labelRaces},
+                {R.id.tabGlobe,   R.id.iconGlobe,   R.id.labelGlobe},
                 {R.id.tabPredict, R.id.iconPredict,  R.id.labelPredict},
                 {R.id.tabPodium,  R.id.iconPodium,   R.id.labelPodium},
                 {R.id.tabDriver,  R.id.iconDriver,   R.id.labelDriver},
         };
 
         for (int[] tab : tabs) {
-            View      tabView = findViewById(tab[0]);
-            ImageView icon    = findViewById(tab[1]);
-            TextView  label   = findViewById(tab[2]);
+            View tabView = findViewById(tab[0]);
+            if (tabView == null) continue; // Sécurité si l'onglet n'existe pas dans ce layout
 
             tabView.setOnClickListener(v -> {
+                // 1. Réinitialiser tous les onglets
                 for (int[] t : tabs) {
-                    ((ImageView) findViewById(t[1])).setColorFilter(inactiveColor);
-                    ((TextView)  findViewById(t[2])).setTextColor(inactiveColor);
+                    ImageView img = findViewById(t[1]);
+                    TextView txt = findViewById(t[2]);
+                    if (img != null) img.setColorFilter(inactiveColor);
+                    if (txt != null) txt.setTextColor(inactiveColor);
                 }
-                icon.setColorFilter(activeColor);
-                label.setTextColor(activeColor);
 
-                // TODO : navigation entre fragments
+                // 2. Navigation
+                Intent intent = null;
                 if (tab[0] == R.id.tabPredict) {
-                    setContentView(R.layout.activity_prediction);
+                    intent = new Intent(this, PredictionActivity.class);
                 } else if (tab[0] == R.id.tabPodium) {
-                    setContentView(R.layout.activity_standings);
+                    intent = new Intent(this, StandingsActivity.class);
                 } else if (tab[0] == R.id.tabDriver) {
-                    setContentView(R.layout.activity_profile);
+                    intent = new Intent(this, ProfileActivity.class);
+                }
+
+                if (intent != null) {
+                    startActivity(intent);
+                    // finish()
+                    overridePendingTransition(0, 0); // Supprime l'animation pour un effet "onglet"
                 }
             });
         }
@@ -232,23 +256,17 @@ public class DashboardActivity extends AppCompatActivity {
     //  Méthode appelée depuis JS : window.Android.onCityClick("Paris")
     // ─────────────────────────────────────────────────────────
     private class GlobeJSInterface {
-
-        /**
-         * Reçoit le nom de la ville cliquée depuis Three.js.
-         * ⚠️  Cette méthode est appelée sur un thread secondaire ;
-         *      toute modification d'UI doit passer par runOnUiThread / Handler.
-         *
-         * @param cityName Nom de la ville (ex: "Paris", "Dubaï")
-         */
         @JavascriptInterface
         public void onCityClick(final String cityName) {
             mainHandler.post(() -> showCityInfo(cityName));
         }
 
-        /**
-         * Méthode bonus : appelée depuis JS pour remonter des erreurs.
-         * window.Android.logError("message")
-         */
+        @JavascriptInterface
+        public void onMapClick() {
+            // Appelé quand on clique dans l'océan ou l'espace
+            mainHandler.post(() -> hideCityInfo());
+        }
+
         @JavascriptInterface
         public void logError(String message) {
             android.util.Log.e("GlobeApp", "JS Error: " + message);
@@ -256,41 +274,40 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     // ─────────────────────────────────────────────────────────
-    //  Affichage de l'information de la ville (UI thread)
+    //  Affichage permanent de la carte
     // ─────────────────────────────────────────────────────────
     private void showCityInfo(String cityName) {
-//        // ── 1) Snackbar ──────────────────────────────────────
-////        View rootView = findViewById(android.R.id.content);
-////        Snackbar snackbar = Snackbar.make(rootView,
-////                "📍  " + cityName + "  sélectionné",
-////                Snackbar.LENGTH_SHORT);
-////        snackbar.setBackgroundTint(0xCC001433);
-////        snackbar.setTextColor(0xFF7ECFFF);
-////        snackbar.show();
-//
-//        // ── 2) Carte native en bas de l'écran ────────────────
-//        cityNameText.setText(cityName);
-//        cityCard.setVisibility(View.VISIBLE);
-//        cityCard.animate()
-//                .alpha(1f)
-//                .translationY(0)
-//                .setDuration(300)
-//                .start();
-//
-//        // Masquer la carte après 3 secondes
-//        if (hideCityCardRunnable != null) mainHandler.removeCallbacks(hideCityCardRunnable);
-//        hideCityCardRunnable = () -> {
-//            cityCard.animate()
-//                    .alpha(0f)
-//                    .translationY(40)
-//                    .setDuration(250)
-//                    .withEndAction(() -> cityCard.setVisibility(View.GONE))
-//                    .start();
-//        };
-//        mainHandler.postDelayed(hideCityCardRunnable, 3000);
-        android.util.Log.d("YES", "all good it's : "+cityName);
+        // Mettre à jour les textes
+        cityNameText.setText(cityName + " GP");
+        // TODO: Mettre une vraie date selon la ville (ex: switch case)
+        raceInfoText.setText("Race details for " + cityName);
+
+        // Afficher avec animation seulement si elle est cachée
+        if (cityCard.getVisibility() != View.VISIBLE || cityCard.getAlpha() < 1f) {
+            cityCard.setVisibility(View.VISIBLE);
+            cityCard.setAlpha(0f);
+            cityCard.setTranslationY(40f);
+            cityCard.animate()
+                    .alpha(1f)
+                    .translationY(0)
+                    .setDuration(300)
+                    .start();
+        }
     }
 
+    // ─────────────────────────────────────────────────────────
+    //  Masquage de la carte
+    // ─────────────────────────────────────────────────────────
+    private void hideCityInfo() {
+        if (cityCard.getVisibility() == View.VISIBLE) {
+            cityCard.animate()
+                    .alpha(0f)
+                    .translationY(50f)
+                    .setDuration(250)
+                    .withEndAction(() -> cityCard.setVisibility(View.GONE))
+                    .start();
+        }
+    }
     // ─────────────────────────────────────────────────────────
     //  Cycle de vie : gestion de la WebView
     // ─────────────────────────────────────────────────────────

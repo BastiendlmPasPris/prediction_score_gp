@@ -2,7 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/rootLayout"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0A0A0A">
@@ -15,7 +15,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- Logo : "F1" rouge + "PREDICT" blanc via SpannableString en Java -->
     <TextView
         android:id="@+id/tvLogo"
         android:layout_width="wrap_content"
@@ -28,7 +27,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/statusBarSpacer" />
 
-    <!-- Slider MAP : à droite, séparé du logo, plus court -->
     <LinearLayout
         android:id="@+id/opacityPanel"
         android:layout_width="160dp"
@@ -73,7 +71,6 @@
 
     </LinearLayout>
 
-    <!-- WebView globe -->
     <WebView
         android:id="@+id/globeWebView"
         android:layout_width="match_parent"
@@ -82,15 +79,27 @@
         android:background="#00000000"
         android:overScrollMode="never"
         app:layout_constraintTop_toBottomOf="@+id/tvLogo"
-        app:layout_constraintBottom_toTopOf="@+id/tvSelectRace" />
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigation" />
 
-    <!-- Bouton pause/play rotation — bas droite, au-dessus de tvSelectRace -->
+    <TextView
+        android:id="@+id/tvSelectRace"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:text="Select a future race"
+        android:fontFamily="monospace"
+        android:textSize="20sp"
+        android:textColor="#888888"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btnRotate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="16dp"
         android:contentDescription="Toggle rotation"
         android:src="@drawable/ic_pause"
         app:backgroundTint="#0A0A0A"
@@ -102,66 +111,81 @@
         app:strokeColor="#55FF3030"
         app:strokeWidth="1dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/tvSelectRace" />
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigation" />
 
-    <!-- Texte central bas -->
-    <TextView
-        android:id="@+id/tvSelectRace"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        android:text="Select a future race"
-        android:fontFamily="monospace"
-        android:textSize="20sp"
-        android:textColor="#888888"
-        app:layout_constraintBottom_toTopOf="@+id/cityCard"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <!-- Carte ville cliquée -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cityCard"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:visibility="gone"
-        app:cardBackgroundColor="#CC001433"
-        app:cardCornerRadius="24dp"
-        app:cardElevation="8dp"
-        app:strokeColor="#557ECFFF"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="invisible"
+        app:cardBackgroundColor="#111111"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="12dp"
+        app:strokeColor="#FF3030"
         app:strokeWidth="1dp"
         app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="10dp"
-            android:gravity="center_vertical">
+            android:orientation="vertical"
+            android:padding="20dp">
 
-            <View
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:background="@drawable/red_dot" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <View
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:background="@drawable/red_dot" />
+
+                <TextView
+                    android:id="@+id/cityNameText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="MONACO"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:fontFamily="monospace"
+                    android:letterSpacing="0.05"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <TextView
-                android:id="@+id/cityNameText"
+                android:id="@+id/raceInfoText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="Paris"
-                android:textColor="#7ECFFF"
-                android:textSize="14sp"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="22dp"
+                android:text="Details de la course..."
+                android:textColor="#888888"
+                android:textSize="12sp"
+                android:fontFamily="monospace" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGoToPredict"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="16dp"
+                android:text="PREDICT"
+                android:textColor="#FFFFFF"
                 android:fontFamily="monospace"
-                android:letterSpacing="0.08"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                app:backgroundTint="#FF3030"
+                app:cornerRadius="8dp" />
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Barre de navigation custom -->
     <LinearLayout
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
@@ -171,7 +195,6 @@
         android:baselineAligned="false"
         app:layout_constraintBottom_toTopOf="@+id/navBarSpacer">
 
-        <!-- Onglet GLOBE -->
         <LinearLayout
             android:id="@+id/tabGlobe"
             android:layout_width="0dp"
@@ -183,14 +206,14 @@
             android:focusable="true">
 
             <ImageView
-                android:id="@+id/iconRaces"
+                android:id="@+id/iconGlobe"
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:src="@drawable/ic_globe"
                 app:tint="#FF3030" />
 
             <TextView
-                android:id="@+id/labelRaces"
+                android:id="@+id/labelGlobe"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
@@ -201,7 +224,6 @@
                 android:letterSpacing="0.08" />
         </LinearLayout>
 
-        <!-- Onglet PREDICT -->
         <LinearLayout
             android:id="@+id/tabPredict"
             android:layout_width="0dp"
@@ -231,7 +253,6 @@
                 android:letterSpacing="0.08" />
         </LinearLayout>
 
-        <!-- Onglet PODIUM -->
         <LinearLayout
             android:id="@+id/tabPodium"
             android:layout_width="0dp"
@@ -261,7 +282,6 @@
                 android:letterSpacing="0.08" />
         </LinearLayout>
 
-        <!-- Onglet DRIVER -->
         <LinearLayout
             android:id="@+id/tabDriver"
             android:layout_width="0dp"

@@ -140,7 +140,13 @@ public class DashboardActivity extends AppCompatActivity {
                 label.setTextColor(activeColor);
 
                 // TODO : navigation entre fragments
-                // if (tab[0] == R.id.tabPredict) { ... }
+                if (tab[0] == R.id.tabPredict) {
+                    setContentView(R.layout.activity_prediction);
+                } else if (tab[0] == R.id.tabPodium) {
+                    setContentView(R.layout.activity_standings);
+                } else if (tab[0] == R.id.tabDriver) {
+                    setContentView(R.layout.activity_profile);
+                }
             });
         }
     }

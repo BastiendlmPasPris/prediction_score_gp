@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+
+    <!-- Bloc 1er (centre, le plus haut) -->
+    <path
+        android:fillColor="#888888"
+        android:pathData="M9,10 L15,10 L15,20 L9,20 Z" />
+
+    <!-- Bloc 2ème (gauche) -->
+    <path
+        android:fillColor="#888888"
+        android:pathData="M2,13 L8,13 L8,20 L2,20 Z" />
+
+    <!-- Bloc 3ème (droite) -->
+    <path
+        android:fillColor="#888888"
+        android:pathData="M16,15 L22,15 L22,20 L16,20 Z" />
+
+
+
+</vector>

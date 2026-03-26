@@ -1,5 +1,8 @@
 package com.example.prediction_score_gp.data.api;
 
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import retrofit2.Retrofit;
@@ -16,6 +19,10 @@ public class RetrofitClient {
         retrofit = null; // reset pour recréer avec le token
     }
 
+    public static String getToken() {
+        return jwtToken;
+    }
+
     public static Retrofit getInstance() {
         if (retrofit == null) {
             OkHttpClient client = new OkHttpClient.Builder()
@@ -30,10 +37,14 @@ public class RetrofitClient {
                     })
                     .build();
 
+            Gson gson = new GsonBuilder()
+                    .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                    .create();
+
             retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
                     .client(client)
-                    .addConverterFactory(GsonConverterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create(gson))
                     .build();
         }
         return retrofit;

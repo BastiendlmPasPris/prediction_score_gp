@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Globe Interactif</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          background: #0a0a0a;
+        }
+
+        canvas {
+          display: block;
+          width: 100% !important;
+          height: 100% !important;
+          touch-action: none;
+        }
+
+        #hint {
+          position: absolute;
+          top: 18px;
+          left: 50%;
+          transform: translateX(-50%);
+          color: rgba(255, 60, 60, 0.5);
+          font-family: 'Courier New', monospace;
+          font-size: 11px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          pointer-events: none;
+          white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+<div id="hint">DRAG TO ROTATE · TAP PIN TO SELECT</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+    function latLonToVector3(lat, lon, radius) {
+      const phi   = (90 - lat) * (Math.PI / 180);
+      const theta = (lon + 180) * (Math.PI / 180);
+      return new THREE.Vector3(
+        -radius * Math.sin(phi) * Math.cos(theta),
+         radius * Math.cos(phi),
+         radius * Math.sin(phi) * Math.sin(theta)
+      );
+    }
+
+    const CITIES = [
+        { name: "Bahreïn", lat: 26.0321, lon: 50.5106 },
+        { name: "Arabie Saoudite", lat: 21.6319, lon: 39.1044 },
+        { name: "Australie", lat: -37.8497, lon: 144.968 },
+        { name: "Japon", lat: 34.8431, lon: 136.541 },
+        { name: "Chine", lat: 31.3389, lon: 121.22 },
+        { name: "Miami", lat: 25.9581, lon: -80.2389 },
+        { name: "Catalogne", lat: 41.57, lon: 2.2611 },
+        { name: "Monaco", lat: 43.7347, lon: 7.4206 },
+        { name: "Espagne (Madrid)", lat: 40.4168, lon: -3.7038 },
+        { name: "Canada", lat: 45.5005, lon: -73.5225 },
+        { name: "Autriche", lat: 47.2197, lon: 14.7647 },
+        { name: "Grande-Bretagne", lat: 52.0786, lon: -1.0169 },
+        { name: "Belgique", lat: 50.4372, lon: 5.9714 },
+        { name: "Hongrie", lat: 47.5832, lon: 19.2505 },
+        { name: "Pays-Bas", lat: 52.3888, lon: 4.5409 },
+        { name: "Italie", lat: 45.6156, lon: 9.2811 },
+        { name: "Azerbaïdjan", lat: 40.3725, lon: 49.8533 },
+        { name: "Singapour", lat: 1.2914, lon: 103.864 },
+        { name: "États-Unis", lat: 30.1328, lon: -97.6411 },
+        { name: "Mexico", lat: 19.4042, lon: -99.0907 },
+        { name: "São Paulo", lat: -23.7036, lon: -46.6997 },
+        { name: "Las Vegas", lat: 36.1147, lon: -115.173 },
+        { name: "Qatar", lat: 25.49, lon: 51.4542 },
+        { name: "Abou Dabi", lat: 24.4672, lon: 54.6031 }
+    ];
+
+    const GLOBE_RADIUS = 1.0;
+    let isAutoRotating = true;
+
+    // ── Scène ────────────────────────────────────────────────────
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a0a);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0, 3.8);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // ── Groupe ───────────────────────────────────────────────────
+    const globeGroup = new THREE.Group();
+    scene.add(globeGroup);
+
+    // ── Lumières ─────────────────────────────────────────────────
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const sun = new THREE.DirectionalLight(0xffd9a0, 0.9);
+    sun.position.set(5, 3, 5);
+    scene.add(sun);
+
+    // ── Texture Terre ────────────────────────────────────────────
+    const EARTH_OPACITY = 1.0;
+    const earthTex = new THREE.TextureLoader().load(
+      'earth.jpg',
+      () => console.log('Texture chargée'),
+      undefined,
+      (err) => console.error('Erreur texture:', err)
+    );
+
+    const earthMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(GLOBE_RADIUS - 0.003, 64, 64),
+      new THREE.MeshPhongMaterial({
+        map: earthTex,
+        transparent: EARTH_OPACITY < 1.0,
+        opacity: EARTH_OPACITY,
+        depthWrite: EARTH_OPACITY >= 1.0,
+      })
+    );
+    window._earthMat = earthMesh.material;
+    globeGroup.add(earthMesh);
+
+    // ── Grille wireframe rouge ───────────────────────────────────
+    const GRID_COLOR   = new THREE.Color(0xcc1111);
+    const WIRE_OPACITY = 0.55;
+    const R = GLOBE_RADIUS + 0.002;
+
+    function addLatitudeLine(latDeg, segments) {
+      const lat = latDeg * Math.PI / 180;
+      const r   = R * Math.cos(lat);
+      const y   = R * Math.sin(lat);
+      const pts = [];
+      for (let i = 0; i <= segments; i++) {
+        const theta = (i / segments) * Math.PI * 2;
+        pts.push(new THREE.Vector3(r * Math.cos(theta), y, r * Math.sin(theta)));
+      }
+      globeGroup.add(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({ color: GRID_COLOR, transparent: true, opacity: WIRE_OPACITY })
+      ));
+    }
+
+    function addLongitudeLine(lonDeg, segments) {
+      const lon = lonDeg * Math.PI / 180;
+      const pts = [];
+      for (let i = 0; i <= segments; i++) {
+        const phi = (i / segments) * Math.PI;
+        pts.push(new THREE.Vector3(
+          R * Math.sin(phi) * Math.cos(lon),
+          R * Math.cos(phi),
+          R * Math.sin(phi) * Math.sin(lon)
+        ));
+      }
+      globeGroup.add(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({ color: GRID_COLOR, transparent: true, opacity: WIRE_OPACITY })
+      ));
+    }
+
+    for (let lat = -80; lat <= 80; lat += 20) addLatitudeLine(lat, 80);
+    for (let lon = 0; lon < 360; lon += 20)   addLongitudeLine(lon, 60);
+
+    // ── Marqueurs de villes ──────────────────────────────────────
+    const markerMeshes = []; // <--- C'EST CE TABLEAU QU'ON DONNE AU RAYCASTER
+
+    CITIES.forEach(city => {
+      const pos = latLonToVector3(city.lat, city.lon, GLOBE_RADIUS + 0.018);
+
+      const dot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.018, 16, 16),
+        new THREE.MeshBasicMaterial({ color: 0xff2020 })
+      );
+      dot.position.copy(pos);
+      dot.userData = { cityName: city.name };
+      globeGroup.add(dot);
+      markerMeshes.push(dot);
+
+      const glow = new THREE.Mesh(
+        new THREE.SphereGeometry(0.032, 16, 16),
+        new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.18 })
+      );
+      glow.position.copy(pos);
+      glow.userData = { cityName: city.name, isGlow: true };
+      globeGroup.add(glow);
+      markerMeshes.push(glow);
+    });
+
+    // ── Drag / rotation ──────────────────────────────────────────
+    let isDragging = false;
+    let prevPointer = null;
+    let velX = 0, velY = 0;
+    const DRAG_FACTOR = 0.005;
+    const INERTIA     = 0.88;
+    const MAX_TILT    = Math.PI / 2.2;
+
+    function applyDelta(dx, dy) {
+      velX = dx * DRAG_FACTOR;
+      velY = dy * DRAG_FACTOR;
+      globeGroup.rotation.y += velX;
+      globeGroup.rotation.x = Math.max(-MAX_TILT, Math.min(MAX_TILT, globeGroup.rotation.x + velY));
+    }
+
+    renderer.domElement.addEventListener('mousedown', e => { isDragging = true;  prevPointer = { x: e.clientX, y: e.clientY }; });
+    window.addEventListener('mousemove',  e => { if (!isDragging) return; applyDelta(e.clientX - prevPointer.x, e.clientY - prevPointer.y); prevPointer = { x: e.clientX, y: e.clientY }; });
+    window.addEventListener('mouseup',    () => { isDragging = false; });
+
+    renderer.domElement.addEventListener('touchstart', e => {
+      if (e.touches.length === 1) { isDragging = true; prevPointer = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }
+    }, { passive: true });
+    window.addEventListener('touchmove', e => {
+      if (!isDragging || e.touches.length !== 1) return;
+      applyDelta(e.touches[0].clientX - prevPointer.x, e.touches[0].clientY - prevPointer.y);
+      prevPointer = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }, { passive: true });
+    window.addEventListener('touchend', () => { isDragging = false; });
+
+    // ── Raycaster (Détection des clics) ──────────────────────────
+    const raycaster = new THREE.Raycaster();
+    raycaster.params.Points = { threshold: 0.05 };
+    const mouse = new THREE.Vector2();
+
+    let pointerDownPos = null;
+    renderer.domElement.addEventListener('pointerdown', e => {
+        pointerDownPos = { x: e.clientX, y: e.clientY };
+    });
+
+    renderer.domElement.addEventListener('pointerup', e => {
+        if (!pointerDownPos) return;
+        // On vérifie qu'on n'a pas drag (mouvement de plus de 6 pixels)
+        if (Math.abs(e.clientX - pointerDownPos.x) > 6 || Math.abs(e.clientY - pointerDownPos.y) > 6) return;
+
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.set(
+            ((e.clientX - rect.left) / rect.width)  * 2 - 1,
+           -((e.clientY - rect.top)  / rect.height) * 2 + 1
+        );
+
+        raycaster.setFromCamera(mouse, camera);
+
+        // CORRECTION ICI : On utilise markerMeshes
+        const intersects = raycaster.intersectObjects(markerMeshes);
+
+        if (intersects.length > 0) {
+            // On a cliqué sur une ville
+            const cityName = intersects[0].object.userData.cityName; // Unifié avec la création de la ville
+            if (window.Android) {
+                window.Android.onCityClick(cityName);
+            } else {
+                console.log("Ville cliquée : " + cityName); // Pour le debug sur PC
+            }
+        } else {
+            // On a cliqué dans le vide
+            if (window.Android) {
+                window.Android.onMapClick();
+            } else {
+                console.log("Map cliquée (Fermeture)"); // Pour le debug sur PC
+            }
+        }
+    });
+
+    // ── API pour Android ─────────────────────────────────────────
+    window.setEarthOpacity = function(value) {
+      const v = Math.max(0.0, Math.min(1.0, parseFloat(value)));
+      window._earthMat.opacity     = v;
+      window._earthMat.transparent = v < 1.0;
+      window._earthMat.depthWrite  = v >= 1.0;
+      window._earthMat.needsUpdate = true;
+    };
+
+    window.toggleRotation = function() {
+        isAutoRotating = !isAutoRotating;
+    };
+
+    // ── Boucle d'animation ───────────────────────────────────────
+    let pulseT = 0;
+    function animate() {
+      requestAnimationFrame(animate);
+      pulseT += 0.05;
+
+      if (!isDragging) {
+        globeGroup.rotation.y += velX;
+        globeGroup.rotation.x = Math.max(-MAX_TILT, Math.min(MAX_TILT, globeGroup.rotation.x + velY));
+        velX *= INERTIA;
+        velY *= INERTIA;
+      }
+
+      globeGroup.children.forEach(child => {
+        if (child.userData && child.userData.isGlow) {
+          child.material.opacity = 0.10 + 0.14 * Math.abs(Math.sin(pulseT));
+        }
+      });
+      if (isAutoRotating) globeGroup.rotation.y += 0.001;
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+</script>
+</body>
+</html>

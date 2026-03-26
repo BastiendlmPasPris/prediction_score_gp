@@ -54,6 +54,14 @@
         android:backgroundTint="@color/f1_red"
         android:layout_marginBottom="16dp" />
 
+    <!-- ProgressBar chargement -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:visibility="gone" />
+
     <!-- Lien Créer un compte -->
     <TextView
         android:id="@+id/tvRegister"

@@ -14,7 +14,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Prediction_score_gp">
+        android:theme="@style/Theme.Prediction_score_gp"
+        android:hardwareAccelerated="true">   <!-- ← OBLIGATOIRE pour Three.js dans WebView -->
         <!-- Écran de démarrage : Login -->
         <activity
             android:name=".ui.auth.LoginActivity"

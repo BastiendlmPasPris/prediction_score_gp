@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.prediction_score_gp.R;
+import com.example.prediction_score_gp.data.api.RetrofitClient; // <--- AJOUTÉ
 import com.example.prediction_score_gp.ui.dashboard.DashboardActivity;
 import com.example.prediction_score_gp.viewmodel.AuthViewModel;
 import com.google.android.material.button.MaterialButton;
@@ -47,7 +48,6 @@ public class LoginActivity extends AppCompatActivity {
         setupClickListeners();
     }
 
-    // ── Logo bicolore "F1" rouge + " PREDICT" gris ───────────────────
     private void setupLogo() {
         TextView tvLogo = findViewById(R.id.tvLogo);
         SpannableString logo = new SpannableString("F1 PREDICT");
@@ -58,7 +58,6 @@ public class LoginActivity extends AppCompatActivity {
         tvLogo.setText(logo);
     }
 
-    // ── Lier les vues ────────────────────────────────────────────────
     private void bindViews() {
         etEmail     = findViewById(R.id.etEmail);
         etPassword  = findViewById(R.id.etPassword);
@@ -69,48 +68,45 @@ public class LoginActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
     }
 
-    // ── ViewModel + observers ────────────────────────────────────────
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
-        // Succès → aller au Dashboard
+        // Succès → TRANSMETTRE LE TOKEN + aller au Dashboard
         viewModel.userLiveData.observe(this, user -> {
-            if (user != null) {
+            if (user != null && user.getToken() != null) {
+                // --- ÉTAPE CRUCIALE : On donne le token à Retrofit ---
+                RetrofitClient.setToken(user.getToken());
+
+                // On peut maintenant naviguer en toute sécurité
                 startActivity(new Intent(this, DashboardActivity.class));
                 finish();
             }
         });
 
-        // Erreur → afficher le message
         viewModel.errorLiveData.observe(this, error -> {
             if (error != null) {
                 tvError.setText(error);
                 tvError.setVisibility(View.VISIBLE);
-                // Souligner le champ en erreur
                 tilEmail.setBoxStrokeColor(Color.parseColor("#FF3030"));
                 tilPassword.setBoxStrokeColor(Color.parseColor("#FF3030"));
             }
         });
 
-        // Loading → spinner + désactiver le bouton
         viewModel.loadingLiveData.observe(this, isLoading -> {
-            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+            if (progressBar != null) progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
             btnLogin.setEnabled(!isLoading);
             btnLogin.setAlpha(isLoading ? 0.5f : 1f);
         });
     }
 
-    // ── Listeners ────────────────────────────────────────────────────
     private void setupClickListeners() {
         btnLogin.setOnClickListener(v -> attemptLogin());
 
-        // Lien vers RegisterActivity
         findViewById(R.id.tvGoRegister).setOnClickListener(v -> {
             startActivity(new Intent(this, RegisterActivity.class));
             overridePendingTransition(0, 0);
         });
 
-        // Reset erreur au focus
         etEmail.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) clearErrors();
         });
@@ -119,7 +115,6 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    // ── Validation + appel ViewModel ────────────────────────────────
     private void attemptLogin() {
         String email    = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
         String password = etPassword.getText() != null ? etPassword.getText().toString() : "";
@@ -130,10 +125,6 @@ public class LoginActivity extends AppCompatActivity {
         }
         if (password.isEmpty()) {
             tilPassword.setError("Mot de passe requis");
-            return;
-        }
-        if (password.length() < 6) {
-            tilPassword.setError("6 caractères minimum");
             return;
         }
 

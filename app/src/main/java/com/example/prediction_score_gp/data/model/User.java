@@ -1,10 +1,21 @@
 package com.example.prediction_score_gp.data.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class User {
+    @SerializedName("id")
     private int id;
+
+    @SerializedName("email")
     private String email;
+
+    @SerializedName("username")
     private String username;
+
+    @SerializedName("role")
     private String role; // "user" ou "admin"
+
+    @SerializedName("token")
     private String token; // JWT
 
     public User() {}

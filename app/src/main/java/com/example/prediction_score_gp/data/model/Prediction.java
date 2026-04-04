@@ -1,11 +1,25 @@
 package com.example.prediction_score_gp.data.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Prediction {
+
+    @SerializedName("driver")
     private String driver;
+
+    @SerializedName("race")
     private String race;
+
+    @SerializedName("predicted_position")
     private int predictedPosition;
+
+    @SerializedName("podium_probability")
     private double podiumProbability;
+
+    @SerializedName("model_version")
     private String modelVersion;
+
+    @SerializedName("confidence_interval")
     private int[] confidenceInterval; // [min, max]
 
     public Prediction() {}

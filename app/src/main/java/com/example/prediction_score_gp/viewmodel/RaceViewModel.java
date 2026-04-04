@@ -4,31 +4,38 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.example.prediction_score_gp.data.model.Race;
 import com.example.prediction_score_gp.data.repository.RaceRepository;
+import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import java.util.List;
 
-public class DashboardViewModel extends ViewModel {
+public class RaceViewModel extends ViewModel {
 
-    private final RaceRepository raceRepository = new RaceRepository();
-
-        public MutableLiveData<Race> nextRaceLiveData = new MutableLiveData<>();
+    // C'est ici que l'Activity va "écouter" les données
     public MutableLiveData<List<Race>> racesLiveData = new MutableLiveData<>();
     public MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+
+    private RaceRepository raceRepository;
+
+    public RaceViewModel() {
+        raceRepository = new RaceRepository();
+    }
 
     public void loadRaces(int season) {
         raceRepository.getRaces(season).enqueue(new Callback<List<Race>>() {
             @Override
             public void onResponse(Call<List<Race>> call, Response<List<Race>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    racesLiveData.setValue(response.body());
-                    // TODO: Identifier le prochain GP et le mettre dans nextRaceLiveData
+                    // On envoie la liste des courses au LiveData
+                    racesLiveData.postValue(response.body());
+                } else {
+                    errorLiveData.postValue("Erreur lors de la récupération des courses");
                 }
             }
+
             @Override
             public void onFailure(Call<List<Race>> call, Throwable t) {
-                errorLiveData.setValue("Erreur réseau : " + t.getMessage());
+                errorLiveData.postValue("Connexion impossible : " + t.getMessage());
             }
         });
     }

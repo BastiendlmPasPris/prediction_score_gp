@@ -3,36 +3,22 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>Globe Interactif</title>
+    <title>Globe Interactif F1 2026</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         html, body {
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-          background: #0a0a0a;
+          width: 100%; height: 100%;
+          overflow: hidden; background: #0a0a0a;
         }
-
         canvas {
-          display: block;
-          width: 100% !important;
-          height: 100% !important;
+          display: block; width: 100% !important; height: 100% !important;
           touch-action: none;
         }
-
         #hint {
-          position: absolute;
-          top: 18px;
-          left: 50%;
-          transform: translateX(-50%);
-          color: rgba(255, 60, 60, 0.5);
-          font-family: 'Courier New', monospace;
-          font-size: 11px;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          pointer-events: none;
-          white-space: nowrap;
+          position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+          color: rgba(255, 60, 60, 0.5); font-family: 'Courier New', monospace;
+          font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+          pointer-events: none; white-space: nowrap;
         }
     </style>
 </head>
@@ -53,37 +39,35 @@
       );
     }
 
+    // Les 22 points correspondent EXACTEMENT aux noms de ton fichier races.csv
     const CITIES = [
-        { name: "Bahreïn", lat: 26.0321, lon: 50.5106 },
-        { name: "Arabie Saoudite", lat: 21.6319, lon: 39.1044 },
-        { name: "Australie", lat: -37.8497, lon: 144.968 },
-        { name: "Japon", lat: 34.8431, lon: 136.541 },
-        { name: "Chine", lat: 31.3389, lon: 121.22 },
+        { name: "Australian", lat: -37.8497, lon: 144.968 },
+        { name: "Chinese", lat: 31.3389, lon: 121.22 },
+        { name: "Japanese", lat: 34.8431, lon: 136.541 },
         { name: "Miami", lat: 25.9581, lon: -80.2389 },
-        { name: "Catalogne", lat: 41.57, lon: 2.2611 },
+        { name: "Canadian", lat: 45.5005, lon: -73.5225 },
         { name: "Monaco", lat: 43.7347, lon: 7.4206 },
-        { name: "Espagne (Madrid)", lat: 40.4168, lon: -3.7038 },
-        { name: "Canada", lat: 45.5005, lon: -73.5225 },
-        { name: "Autriche", lat: 47.2197, lon: 14.7647 },
-        { name: "Grande-Bretagne", lat: 52.0786, lon: -1.0169 },
-        { name: "Belgique", lat: 50.4372, lon: 5.9714 },
-        { name: "Hongrie", lat: 47.5832, lon: 19.2505 },
-        { name: "Pays-Bas", lat: 52.3888, lon: 4.5409 },
-        { name: "Italie", lat: 45.6156, lon: 9.2811 },
-        { name: "Azerbaïdjan", lat: 40.3725, lon: 49.8533 },
-        { name: "Singapour", lat: 1.2914, lon: 103.864 },
-        { name: "États-Unis", lat: 30.1328, lon: -97.6411 },
-        { name: "Mexico", lat: 19.4042, lon: -99.0907 },
-        { name: "São Paulo", lat: -23.7036, lon: -46.6997 },
+        { name: "Barcelona", lat: 41.57, lon: 2.2611 },
+        { name: "Austrian", lat: 47.2197, lon: 14.7647 },
+        { name: "British", lat: 52.0786, lon: -1.0169 },
+        { name: "Belgian", lat: 50.4372, lon: 5.9714 },
+        { name: "Hungarian", lat: 47.5832, lon: 19.2505 },
+        { name: "Dutch", lat: 52.3888, lon: 4.5409 },
+        { name: "Italian", lat: 45.6156, lon: 9.2811 },
+        { name: "Spanish", lat: 40.466, lon: -3.616 },
+        { name: "Azerbaijan", lat: 40.3725, lon: 49.8533 },
+        { name: "Singapore", lat: 1.2914, lon: 103.864 },
+        { name: "United States", lat: 30.1328, lon: -97.6411 },
+        { name: "Mexico City", lat: 19.4042, lon: -99.0907 },
+        { name: "Brazilian", lat: -23.7036, lon: -46.6997 },
         { name: "Las Vegas", lat: 36.1147, lon: -115.173 },
-        { name: "Qatar", lat: 25.49, lon: 51.4542 },
-        { name: "Abou Dabi", lat: 24.4672, lon: 54.6031 }
+        { name: "Qatar", lat: 25.4900, lon: 51.4542 },
+        { name: "Abu Dhabi", lat: 24.4672, lon: 54.6031 }
     ];
 
     const GLOBE_RADIUS = 1.0;
     let isAutoRotating = true;
 
-    // ── Scène ────────────────────────────────────────────────────
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0a0a);
 
@@ -95,17 +79,14 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // ── Groupe ───────────────────────────────────────────────────
     const globeGroup = new THREE.Group();
     scene.add(globeGroup);
 
-    // ── Lumières ─────────────────────────────────────────────────
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
     const sun = new THREE.DirectionalLight(0xffd9a0, 0.9);
     sun.position.set(5, 3, 5);
     scene.add(sun);
 
-    // ── Texture Terre ────────────────────────────────────────────
     const EARTH_OPACITY = 1.0;
     const earthTex = new THREE.TextureLoader().load(
       'earth.jpg',
@@ -126,7 +107,6 @@
     window._earthMat = earthMesh.material;
     globeGroup.add(earthMesh);
 
-    // ── Grille wireframe rouge ───────────────────────────────────
     const GRID_COLOR   = new THREE.Color(0xcc1111);
     const WIRE_OPACITY = 0.55;
     const R = GLOBE_RADIUS + 0.002;
@@ -166,8 +146,7 @@
     for (let lat = -80; lat <= 80; lat += 20) addLatitudeLine(lat, 80);
     for (let lon = 0; lon < 360; lon += 20)   addLongitudeLine(lon, 60);
 
-    // ── Marqueurs de villes ──────────────────────────────────────
-    const markerMeshes = []; // <--- C'EST CE TABLEAU QU'ON DONNE AU RAYCASTER
+    const markerMeshes = [];
 
     CITIES.forEach(city => {
       const pos = latLonToVector3(city.lat, city.lon, GLOBE_RADIUS + 0.018);
@@ -191,7 +170,6 @@
       markerMeshes.push(glow);
     });
 
-    // ── Drag / rotation ──────────────────────────────────────────
     let isDragging = false;
     let prevPointer = null;
     let velX = 0, velY = 0;
@@ -220,7 +198,6 @@
     }, { passive: true });
     window.addEventListener('touchend', () => { isDragging = false; });
 
-    // ── Raycaster (Détection des clics) ──────────────────────────
     const raycaster = new THREE.Raycaster();
     raycaster.params.Points = { threshold: 0.05 };
     const mouse = new THREE.Vector2();
@@ -232,7 +209,6 @@
 
     renderer.domElement.addEventListener('pointerup', e => {
         if (!pointerDownPos) return;
-        // On vérifie qu'on n'a pas drag (mouvement de plus de 6 pixels)
         if (Math.abs(e.clientX - pointerDownPos.x) > 6 || Math.abs(e.clientY - pointerDownPos.y) > 6) return;
 
         const rect = renderer.domElement.getBoundingClientRect();
@@ -242,29 +218,16 @@
         );
 
         raycaster.setFromCamera(mouse, camera);
-
-        // CORRECTION ICI : On utilise markerMeshes
         const intersects = raycaster.intersectObjects(markerMeshes);
 
         if (intersects.length > 0) {
-            // On a cliqué sur une ville
-            const cityName = intersects[0].object.userData.cityName; // Unifié avec la création de la ville
-            if (window.Android) {
-                window.Android.onCityClick(cityName);
-            } else {
-                console.log("Ville cliquée : " + cityName); // Pour le debug sur PC
-            }
+            const cityName = intersects[0].object.userData.cityName;
+            if (window.Android) window.Android.onCityClick(cityName);
         } else {
-            // On a cliqué dans le vide
-            if (window.Android) {
-                window.Android.onMapClick();
-            } else {
-                console.log("Map cliquée (Fermeture)"); // Pour le debug sur PC
-            }
+            if (window.Android) window.Android.onMapClick();
         }
     });
 
-    // ── API pour Android ─────────────────────────────────────────
     window.setEarthOpacity = function(value) {
       const v = Math.max(0.0, Math.min(1.0, parseFloat(value)));
       window._earthMat.opacity     = v;
@@ -277,7 +240,6 @@
         isAutoRotating = !isAutoRotating;
     };
 
-    // ── Boucle d'animation ───────────────────────────────────────
     let pulseT = 0;
     function animate() {
       requestAnimationFrame(animate);

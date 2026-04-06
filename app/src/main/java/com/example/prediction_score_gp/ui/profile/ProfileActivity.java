@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,7 +18,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.prediction_score_gp.R;
-import com.example.prediction_score_gp.data.model.User;
 import com.example.prediction_score_gp.ui.dashboard.DashboardActivity;
 import com.example.prediction_score_gp.ui.prediction.PredictionActivity;
 import com.example.prediction_score_gp.ui.standings.StandingsActivity;
@@ -25,12 +25,13 @@ import com.example.prediction_score_gp.ui.standings.StandingsActivity;
 public class ProfileActivity extends AppCompatActivity {
 
     private TextView tvUsername, tvEmail, tvRole;
+    private View userCard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Mode plein écran
+        // Mode plein écran pour l'immersion
         getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
@@ -38,22 +39,25 @@ public class ProfileActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_profile);
 
-        // 1. Gestion des barres système (Insets)
-        setupWindowInsets();
-
-        // 2. Initialisation des Vues
+        // 1. Initialisation des Vues
+        userCard = findViewById(R.id.userCard);
         tvUsername = findViewById(R.id.tvUsername);
         tvEmail = findViewById(R.id.tvEmail);
         tvRole = findViewById(R.id.tvRole);
 
+        // 2. Configuration des interactions
         findViewById(R.id.btnLogout).setOnClickListener(v -> logoutUser());
 
-        // 3. Charger les données (Simulation)
-        loadUserProfile();
-        setupHistoryRecyclerView();
-
-        // 4. Configuration de la NavBar
+        // 3. Setup des composants
+        setupWindowInsets();
+        loadUserData();
+        setupHistoryList();
         setupNavBar();
+
+        // 4. Petite animation d'apparition
+        userCard.setAlpha(0f);
+        userCard.setTranslationY(20f);
+        userCard.animate().alpha(1f).translationY(0f).setDuration(500).start();
     }
 
     private void setupWindowInsets() {
@@ -63,6 +67,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
             Insets sysBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
             if (statusSpacer != null) {
                 ViewGroup.LayoutParams spTop = statusSpacer.getLayoutParams();
                 spTop.height = sysBars.top;
@@ -77,41 +82,58 @@ public class ProfileActivity extends AppCompatActivity {
         });
     }
 
-    private void loadUserProfile() {
-        // TODO: Remplacer par l'appel à SharedPreferences ou ton ViewModel
-        User mockUser = new User(1, "max.verstappen@f1.com", "SuperMax", "user", "dummy_token");
+    private void loadUserData() {
+        // On récupère le fichier de sauvegarde nommé "UserPrefs"
+        android.content.SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
 
-        if (tvUsername != null) tvUsername.setText(mockUser.getUsername());
-        if (tvEmail != null) tvEmail.setText(mockUser.getEmail());
-        if (tvRole != null) tvRole.setText(mockUser.getRole().toUpperCase());
+        // On extrait les valeurs. Si elles n'existent pas, on met une valeur par défaut ("—")
+        String username = prefs.getString("username", "Guest");
+        String email    = prefs.getString("email", "not_connected@f1.com");
+        String role     = prefs.getString("role", "MEMBER");
+
+        // Mise à jour de l'interface
+        tvUsername.setText(username);
+        tvEmail.setText(email);
+        tvRole.setText(role.toUpperCase());
+
+        // Optionnel : Changer la couleur du badge selon le rôle
+        if (role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("analyst")) {
+            tvRole.setTextColor(Color.parseColor("#FFD700")); // Or pour les VIP
+            tvRole.setBackgroundColor(Color.parseColor("#26FFD700"));
+        }
     }
 
-    private void setupHistoryRecyclerView() {
+    private void setupHistoryList() {
         RecyclerView rvHistory = findViewById(R.id.rvHistory);
         if (rvHistory != null) {
             rvHistory.setLayoutManager(new LinearLayoutManager(this));
-            // TODO: Créer un HistoryAdapter et l'attacher ici
-            // rvHistory.setAdapter(new HistoryAdapter(votreListe));
+            // Ici tu pourras attacher ton HistoryAdapter quand il sera prêt
+            // rvHistory.setAdapter(new HistoryAdapter(data));
         }
     }
 
     private void logoutUser() {
-        // TODO: Effacer le token JWT des SharedPreferences
+
         Toast.makeText(this, "Déconnexion en cours...", Toast.LENGTH_SHORT).show();
 
-        // Redirection vers l'écran de login (à adapter selon ta structure)
-        // Intent intent = new Intent(this, LoginActivity.class);
-        // intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        // startActivity(intent);
-        // finish();
+        // Redirection vers Login (à décommenter quand tu auras LoginActivity)
+        /*
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+        */
     }
 
     private void setupNavBar() {
+        int activeColor = Color.parseColor("#FF3030");
+        int inactiveColor = Color.parseColor("#888888");
+
         int[][] tabs = {
-                {R.id.tabGlobe, R.id.iconGlobe, R.id.labelGlobe},
-                {R.id.tabPredict, R.id.iconPredict, R.id.labelPredict},
-                {R.id.tabPodium, R.id.iconPodium, R.id.labelPodium},
-                {R.id.tabDriver, R.id.iconDriver, R.id.labelDriver},
+                {R.id.tabGlobe,   R.id.iconGlobe,   R.id.labelGlobe},
+                {R.id.tabPredict, R.id.iconPredict,  R.id.labelPredict},
+                {R.id.tabPodium,  R.id.iconPodium,   R.id.labelPodium},
+                {R.id.tabDriver,  R.id.iconDriver,   R.id.labelDriver},
         };
 
         for (int[] tab : tabs) {
@@ -119,21 +141,18 @@ public class ProfileActivity extends AppCompatActivity {
             if (tabView == null) continue;
 
             tabView.setOnClickListener(v -> {
-                // Si on clique sur l'onglet déjà actif (Driver/Profile), on ne fait rien
+                // On ne fait rien si on est déjà sur la page Driver
                 if (tab[0] == R.id.tabDriver) return;
 
-                Intent intent = null;
-                if (tab[0] == R.id.tabGlobe) {
-                    intent = new Intent(this, DashboardActivity.class);
-                } else if (tab[0] == R.id.tabPredict) {
-                    intent = new Intent(this, PredictionActivity.class);
-                } else if (tab[0] == R.id.tabPodium) {
-                    intent = new Intent(this, StandingsActivity.class);
-                }
+                Class<?> target = null;
+                if (tab[0] == R.id.tabGlobe) target = DashboardActivity.class;
+                else if (tab[0] == R.id.tabPredict) target = PredictionActivity.class;
+                else if (tab[0] == R.id.tabPodium) target = StandingsActivity.class;
 
-                if (intent != null) {
+                if (target != null) {
+                    Intent intent = new Intent(this, target);
                     startActivity(intent);
-                    overridePendingTransition(0, 0);
+                    overridePendingTransition(0, 0); // Transition fluide pour la nav bar
                     finish();
                 }
             });

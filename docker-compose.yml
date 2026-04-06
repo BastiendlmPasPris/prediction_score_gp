@@ -22,7 +22,7 @@ services:
     container_name: f1predict-api
     restart: unless-stopped
     ports:
-      - "8080:8000"
+      - "8000:8000"
     environment:
       DATABASE_URL: postgresql://f1predict:f1predict_pass@db:5432/f1predict
       JWT_SECRET: ${JWT_SECRET:-f1predict_secret_change_in_prod}

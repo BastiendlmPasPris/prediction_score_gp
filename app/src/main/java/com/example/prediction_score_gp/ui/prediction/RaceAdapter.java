@@ -51,8 +51,8 @@ public class RaceAdapter extends RecyclerView.Adapter<RaceAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Race race = races.get(position);
 
-        // flagUrl contient soit une URL soit un emoji selon votre source de données
-        holder.tvFlag.setText(race.getFlagUrl());
+        String flagEmoji = RaceBottomSheet.getFlagEmoji(race.getCountry());
+        holder.tvFlag.setText(flagEmoji);
         holder.tvName.setText(race.getName());
 
         holder.itemView.setOnClickListener(v -> listener.onRaceClick(race));

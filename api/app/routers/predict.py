@@ -48,10 +48,11 @@ def _get_race_name(race_id: int) -> str:
 
 def _build_features(race_id: int, driver_id: int) -> dict:
     """
-    Construit le vecteur de features pour l'inférence ML (SANS LA GRILLE).
+    Construit le vecteur de features pour l'inférence ML.
+    Utilise les CSV si disponibles, sinon utilise des valeurs par défaut.
     """
     features = {
-        # grid_position a été supprimé ici
+        "grid_position": 10.0,
         "driver_age": 28.0,
         "dnf_rate_last10": 0.1,
         "driver_podiums_last5": 1.0,
@@ -62,9 +63,18 @@ def _build_features(race_id: int, driver_id: int) -> dict:
 
     results_df = _load_csv("results")
     drivers_df = _load_csv("drivers")
+    qualifying_df = _load_csv("qualifying")
     races_df = _load_csv("races")
 
-    # Le bloc lisant "qualifying_df" a été entièrement supprimé
+    # Position de départ (grille)
+    if not qualifying_df.empty:
+        q = qualifying_df[
+            (qualifying_df["raceId"] == race_id) & (qualifying_df["driverId"] == driver_id)
+        ]
+        if not q.empty:
+            pos = pd.to_numeric(q.iloc[0]["position"], errors="coerce")
+            if pd.notna(pos):
+                features["grid_position"] = float(pos)
 
     # Âge du pilote
     if not drivers_df.empty and not races_df.empty:
@@ -159,6 +169,7 @@ def predict_driver(
 
     predicted_pos = _proba_to_position(ml_result["podium_probability"])
 
+    # Sauvegarde dans prediction_log
     log = PredictionLog(
         user_id=current_user.id,
         race_id=request.race_id,
@@ -200,12 +211,8 @@ def predict_race(
         )
 
     race_entries = results_df[results_df["raceId"] == race_id]
-    
-    # SÉCURITÉ : Si la course n'a pas encore eu lieu, on prend la liste des pilotes 
-    # de la course précédente (ou du championnat) pour pouvoir quand même prédire.
     if race_entries.empty:
-        last_race_id = results_df["raceId"].max()
-        race_entries = results_df[results_df["raceId"] == last_race_id]
+        raise HTTPException(status_code=404, detail="Aucun pilote trouvé pour cette course")
 
     driver_ids = race_entries["driverId"].unique().tolist()
     race_name = _get_race_name(race_id)

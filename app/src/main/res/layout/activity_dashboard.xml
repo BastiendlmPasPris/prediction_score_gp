@@ -1,94 +1,324 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black">
+    android:background="#0A0A0A">
 
-    <!-- Contenu principal scrollable -->
-    <ScrollView
+    <View
+        android:id="@+id/statusBarSpacer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="56dp">
+        android:layout_height="0dp"
+        android:background="#0A0A0A"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tvLogo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="12dp"
+        android:fontFamily="monospace"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/statusBarSpacer" />
+
+    <LinearLayout
+        android:id="@+id/opacityPanel"
+        android:layout_width="160dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvLogo"
+        app:layout_constraintBottom_toBottomOf="@+id/tvLogo">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:fontFamily="monospace"
+            android:letterSpacing="0.12"
+            android:text="MAP"
+            android:textColor="#66FF3030"
+            android:textSize="10sp" />
+
+        <SeekBar
+            android:id="@+id/opacitySeekBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="100"
+            android:progress="100"
+            android:progressTint="#AAFF3030"
+            android:thumbTint="#FF3030" />
+
+        <TextView
+            android:id="@+id/opacityValue"
+            android:layout_width="36dp"
+            android:layout_height="wrap_content"
+            android:text="100%"
+            android:textColor="#66FF3030"
+            android:fontFamily="monospace"
+            android:textSize="10sp"
+            android:layout_marginStart="6dp"
+            android:gravity="end" />
+
+    </LinearLayout>
+
+    <WebView
+        android:id="@+id/globeWebView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layerType="hardware"
+        android:background="#00000000"
+        android:overScrollMode="never"
+        app:layout_constraintTop_toBottomOf="@+id/tvLogo"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigation" />
+
+    <TextView
+        android:id="@+id/tvSelectRace"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:text="Select a future race"
+        android:fontFamily="monospace"
+        android:textSize="20sp"
+        android:textColor="#888888"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btnRotate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="Toggle rotation"
+        android:src="@drawable/ic_pause"
+        app:backgroundTint="#0A0A0A"
+        app:borderWidth="0dp"
+        app:elevation="4dp"
+        app:fabSize="mini"
+        app:tint="#FF3030"
+        app:rippleColor="#33FF3030"
+        app:strokeColor="#55FF3030"
+        app:strokeWidth="1dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigation" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cityCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="invisible"
+        app:cardBackgroundColor="#111111"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="12dp"
+        app:strokeColor="#FF3030"
+        app:strokeWidth="1dp"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp">
 
-            <!-- Section Prochain GP -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Prochain Grand Prix"
-                android:textColor="@color/f1_red"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardNextRace"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardBackgroundColor="@color/dark_gray"
-                app:cardCornerRadius="12dp">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <View
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:background="@drawable/red_dot" />
+
+                <TextView
+                    android:id="@+id/cityNameText"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:layout_marginStart="12dp"
+                    android:text="MONACO"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:fontFamily="monospace"
+                    android:letterSpacing="0.05"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-                    <!-- TODO: ImageView drapeau + TextView nom circuit -->
-                    <TextView android:id="@+id/tvRaceName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/white"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:text="GP de Monaco" />
-
-                    <!-- TODO: Compte à rebours -->
-                    <TextView android:id="@+id/tvCountdown"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/f1_red"
-                        android:textSize="16sp"
-                        android:text="Dans J-5" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Section Prédictions rapides -->
             <TextView
+                android:id="@+id/raceInfoText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Prédictions rapides"
-                android:textColor="@color/f1_red"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="22dp"
+                android:text="Details de la course..."
+                android:textColor="#888888"
+                android:textSize="12sp"
+                android:fontFamily="monospace" />
 
-            <!-- TODO: RecyclerView ou 3 cards pour top 3 prédits -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvQuickPredictions"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGoToPredict"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="50dp"
+                android:layout_marginTop="16dp"
+                android:text="PREDICT"
+                android:textColor="#FFFFFF"
+                android:fontFamily="monospace"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                app:backgroundTint="#FF3030"
+                app:cornerRadius="8dp" />
 
         </LinearLayout>
-    </ScrollView>
+    </com.google.android.material.card.MaterialCardView>
 
-    <!-- Barre de navigation en bas -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
+    <LinearLayout
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_gravity="bottom"
-        app:menu="@menu/bottom_nav_menu"
-        app:itemIconTint="@color/white"
-        app:itemTextColor="@color/white"
-        android:background="@color/dark_gray" />
+        android:layout_height="60dp"
+        android:background="#0A0A0A"
+        android:orientation="horizontal"
+        android:baselineAligned="false"
+        app:layout_constraintBottom_toTopOf="@+id/navBarSpacer">
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+        <LinearLayout
+            android:id="@+id/tabGlobe"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/iconGlobe"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_globe"
+                app:tint="#FF3030" />
+
+            <TextView
+                android:id="@+id/labelGlobe"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="GLOBE"
+                android:textColor="#FF3030"
+                android:fontFamily="monospace"
+                android:textSize="9sp"
+                android:letterSpacing="0.08" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tabPredict"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/iconPredict"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_lightning"
+                app:tint="#888888" />
+
+            <TextView
+                android:id="@+id/labelPredict"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="PREDICT"
+                android:textColor="#888888"
+                android:fontFamily="monospace"
+                android:textSize="9sp"
+                android:letterSpacing="0.08" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tabPodium"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/iconPodium"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_podium"
+                app:tint="#888888" />
+
+            <TextView
+                android:id="@+id/labelPodium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="PODIUM"
+                android:textColor="#888888"
+                android:fontFamily="monospace"
+                android:textSize="9sp"
+                android:letterSpacing="0.08" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tabDriver"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/iconDriver"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_driver"
+                app:tint="#888888" />
+
+            <TextView
+                android:id="@+id/labelDriver"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="DRIVER"
+                android:textColor="#888888"
+                android:fontFamily="monospace"
+                android:textSize="9sp"
+                android:letterSpacing="0.08" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/navBarSpacer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#0A0A0A"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

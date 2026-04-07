@@ -21,8 +21,15 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Émulateur Android Studio → 10.0.2.2 est le localhost de la machine hôte.
+            // Sur un vrai téléphone, modifier depuis Profile → API URL dans l'app.
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8000/\"")
+        }
         release {
             isMinifyEnabled = false
+            // ⚠️ Remplacer par l'URL du serveur de production avant le déploiement.
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8000/\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -30,8 +37,17 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    // Accélération matérielle activée globalement
+    buildFeatures {
+        viewBinding = true
+    }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 }
 
@@ -60,7 +76,13 @@ dependencies {
     implementation(libs.cardview)
     implementation(libs.recyclerview)
 
+    // SwipeRefreshLayout (pull-to-refresh)
+    implementation(libs.swiperefreshlayout)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+
+
 }

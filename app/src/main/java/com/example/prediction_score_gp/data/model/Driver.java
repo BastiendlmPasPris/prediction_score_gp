@@ -1,15 +1,26 @@
 package com.example.prediction_score_gp.data.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Driver {
     private int id;
+
+    @SerializedName("first_name")
     private String firstName;
+
+    @SerializedName("last_name")
     private String lastName;
+
     private String nationality;
     private String team;
+
+    @SerializedName("photo_url")
     private String photoUrl;
+
     private int wins;
     private int podiums;
     private int poles;
+
     private double podiumProbability; // utilisé pour le classement prédit
 
     public Driver() {}

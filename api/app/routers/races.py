@@ -53,6 +53,26 @@ def get_races(
     df = df.sort_values(["year", "round"], ascending=[False, True])
     return [_row_to_race_response(row) for _, row in df.iterrows()]
 
+    return RaceResponse(
+        id=int(row["raceId"]),
+        name=str(row["name"]),
+        circuit=circuit,
+        country=country,
+        date=str(row["date"]),
+        season=int(row["year"]),
+        flag_url=None,
+    )
+
+@router.get("", response_model=List[RaceResponse])
+def get_races(season: Optional[int] = Query(None), db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    df = _load_races_with_circuits()
+    if season is not None:
+        df = df[df["year"] == season]
+    
+    # On trie du premier au dernier Grand Prix
+    df = df.sort_values(["year", "round"], ascending=[True, True])
+    
+    return [_row_to_race_response(row) for _, row in df.iterrows()]
 
 @router.get("/{race_id}", response_model=RaceResponse)
 def get_race(

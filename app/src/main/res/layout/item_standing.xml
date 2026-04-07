@@ -1,60 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="12dp"
-    android:gravity="center_vertical">
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="4dp"
+    app:cardBackgroundColor="#1A1A1A"
+    app:cardCornerRadius="8dp"
+    app:strokeWidth="0dp">
 
-    <!-- Position -->
-    <TextView
-        android:id="@+id/tvPosition"
-        android:layout_width="32dp"
-        android:layout_height="wrap_content"
-        android:text="1"
-        android:textColor="@color/white"
-        android:textSize="18sp"
-        android:textStyle="bold" />
-
-    <!-- Photo pilote -->
-    <ImageView
-        android:id="@+id/imgDriver"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="8dp"
-        android:contentDescription="Photo pilote" />
-
-    <!-- Nom + Ecurie -->
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:layout_marginStart="12dp"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center_vertical">
+
+        <View
+            android:id="@+id/itemTeamColor"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="12dp"
+            android:background="#888888"/>
 
         <TextView
-            android:id="@+id/tvDriverName"
-            android:layout_width="wrap_content"
+            android:id="@+id/itemPosition"
+            android:layout_width="30dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textSize="15sp"
+            android:text="4"
+            android:textColor="#888888"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/itemName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="L. Norris"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/itemTeam"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="McLaren"
+                android:textColor="#AAAAAA"
+                android:textSize="12sp" />
+        </LinearLayout>
+
         <TextView
-            android:id="@+id/tvTeam"
+            android:id="@+id/itemProba"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/gray"
+            android:text="Proba: 12%"
+            android:textColor="#FF3030"
             android:textSize="12sp" />
+
     </LinearLayout>
-
-    <!-- Probabilité podium -->
-    <TextView
-        android:id="@+id/tvPodiumProba"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/f1_red"
-        android:textSize="13sp" />
-
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

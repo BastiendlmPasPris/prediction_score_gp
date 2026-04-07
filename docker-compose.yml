@@ -28,7 +28,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-f1predict_secret_change_in_prod}
       ML_MODELS_PATH: /ml/models/versions
     volumes:
-      - ./ml/models:/ml/models     # partage les modèles avec le service ML
+      - ./ml:/ml
     depends_on:
       - db
 

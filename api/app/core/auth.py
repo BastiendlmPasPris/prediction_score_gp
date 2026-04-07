@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials 
 from jose import JWTError, jwt
 
 from app.core.config import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+security = HTTPBearer()
 
 SECRET_KEY = settings.JWT_SECRET
 ALGORITHM = "HS256"
@@ -32,8 +32,9 @@ def decode_token(token: str) -> dict:
         )
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)): # <-- CHANGEMENT ICI
     """Middleware : vérifie le JWT et retourne l'utilisateur"""
+    token = credentials.credentials # <-- Récupération du token
     payload = decode_token(token)
     from app.db.database import SessionLocal
     from app.models.user import User
@@ -50,8 +51,9 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         db.close()
 
 
-def get_current_admin(token: str = Depends(oauth2_scheme)):
+def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)): # <-- CHANGEMENT ICI
     """Middleware : vérifie le JWT et que l'utilisateur est admin"""
+    token = credentials.credentials # <-- Récupération du token
     payload = decode_token(token)
     if payload.get("role") != "admin":
         raise HTTPException(

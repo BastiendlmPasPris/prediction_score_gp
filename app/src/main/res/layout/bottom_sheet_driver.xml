@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/bottom_sheet_driver.xml -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#141414"
+    android:paddingTop="12dp"
+    android:paddingBottom="32dp"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp">
+
+    <!-- Poignée -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:background="#333333" />
+
+    <!-- Photo + Nom + Équipe -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="4dp">
+
+        <ImageView
+            android:id="@+id/bsDriverPhoto"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:src="@android:drawable/ic_menu_gallery"
+            android:scaleType="centerCrop"
+            android:background="#1A1A1A"
+            android:padding="4dp"
+            android:layout_marginEnd="14dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/bsDriverName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lando Norris"
+                android:textColor="@color/f1_light_gray"
+                android:fontFamily="monospace"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/bsDriverTeam"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="McLaren"
+                android:textColor="#FF3030"
+                android:fontFamily="monospace"
+                android:textSize="13sp"
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <!-- Badge position -->
+        <TextView
+            android:id="@+id/bsDriverPosition"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="1"
+            android:textColor="#FFD700"
+            android:fontFamily="monospace"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:background="#1A1A1A" />
+
+    </LinearLayout>
+
+    <!-- Séparateur -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1F1F1F"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Stats : Victoires / Podiums / Poles -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="VICTOIRES"
+                android:textColor="#444444"
+                android:fontFamily="monospace"
+                android:textSize="9sp"
+                android:letterSpacing="0.12" />
+            <TextView
+                android:id="@+id/bsDriverWins"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textColor="#CCCCCC"
+                android:fontFamily="monospace"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <View android:layout_width="1dp" android:layout_height="40dp" android:background="#1F1F1F" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PODIUMS"
+                android:textColor="#444444"
+                android:fontFamily="monospace"
+                android:textSize="9sp"
+                android:letterSpacing="0.12" />
+            <TextView
+                android:id="@+id/bsDriverPodiums"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textColor="#CCCCCC"
+                android:fontFamily="monospace"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <View android:layout_width="1dp" android:layout_height="40dp" android:background="#1F1F1F" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="POLES"
+                android:textColor="#444444"
+                android:fontFamily="monospace"
+                android:textSize="9sp"
+                android:letterSpacing="0.12" />
+            <TextView
+                android:id="@+id/bsDriverPoles"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textColor="#CCCCCC"
+                android:fontFamily="monospace"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Séparateur -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1F1F1F"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Probabilité podium -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="PROBABILITÉ PODIUM"
+        android:textColor="#444444"
+        android:fontFamily="monospace"
+        android:textSize="9sp"
+        android:letterSpacing="0.12"
+        android:layout_marginBottom="8dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="20dp">
+
+        <!-- Barre de progression -->
+        <ProgressBar
+            android:id="@+id/bsProbaBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="8dp"
+            android:layout_weight="1"
+            android:max="100"
+            android:progress="92"
+            android:progressTint="#FF3030"
+            android:progressBackgroundTint="#2A2A2A"
+            android:layout_marginEnd="12dp" />
+
+        <TextView
+            android:id="@+id/bsProbaValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="92%"
+            android:textColor="#FF3030"
+            android:fontFamily="monospace"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <!-- Nationalité -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="NATIONALITÉ"
+        android:textColor="#444444"
+        android:fontFamily="monospace"
+        android:textSize="9sp"
+        android:letterSpacing="0.12"
+        android:layout_marginBottom="6dp" />
+
+    <TextView
+        android:id="@+id/bsDriverNationality"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="British"
+        android:textColor="#CCCCCC"
+        android:fontFamily="monospace"
+        android:textSize="14sp"
+        android:layout_marginBottom="4dp" />
+
+</LinearLayout>

@@ -240,12 +240,34 @@
         isAutoRotating = !isAutoRotating;
     };
 
+    // ── Gyroscope ────────────────────────────────────────────────────────────
+    let gyroMode = false;
+    const GYRO_SENSITIVITY = 2.5;
+
+    window.setGyroMode = function(enabled) {
+        gyroMode = enabled;
+        if (enabled) {
+            isAutoRotating = false;
+            velX = 0;
+            velY = 0;
+        }
+    };
+
+    window.applyGyroRotation = function(deltaY, deltaX) {
+        if (!gyroMode) return;
+        globeGroup.rotation.y += deltaY * GYRO_SENSITIVITY;
+        globeGroup.rotation.x = Math.max(
+            -MAX_TILT,
+            Math.min(MAX_TILT, globeGroup.rotation.x + deltaX * GYRO_SENSITIVITY)
+        );
+    };
+
     let pulseT = 0;
     function animate() {
       requestAnimationFrame(animate);
       pulseT += 0.05;
 
-      if (!isDragging) {
+      if (!isDragging && !gyroMode) {
         globeGroup.rotation.y += velX;
         globeGroup.rotation.x = Math.max(-MAX_TILT, Math.min(MAX_TILT, globeGroup.rotation.x + velY));
         velX *= INERTIA;
@@ -257,7 +279,7 @@
           child.material.opacity = 0.10 + 0.14 * Math.abs(Math.sin(pulseT));
         }
       });
-      if (isAutoRotating) globeGroup.rotation.y += 0.001;
+      if (isAutoRotating && !gyroMode) globeGroup.rotation.y += 0.001;
 
       renderer.render(scene, camera);
     }

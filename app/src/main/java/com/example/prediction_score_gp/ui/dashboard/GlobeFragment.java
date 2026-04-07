@@ -1,7 +1,12 @@
 package com.example.prediction_score_gp.ui.dashboard;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -12,13 +17,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
-import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -57,6 +62,52 @@ public class GlobeFragment extends Fragment {
     private boolean isGlobeRotating = true;
     private int currentSelectedRaceId = -1;
 
+    // Gyroscope
+    private SensorManager sensorManager;
+    private Sensor rotationSensor;
+    private boolean isGyroEnabled = false;
+    private float lastAzimuth = Float.NaN;
+    private float lastPitch = Float.NaN;
+
+    private final SensorEventListener gyroListener = new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            if (!isGyroEnabled) return;
+
+            float[] rotMatrix = new float[9];
+            SensorManager.getRotationMatrixFromVector(rotMatrix, event.values);
+            float[] orientation = new float[3];
+            SensorManager.getOrientation(rotMatrix, orientation);
+
+            float azimuth = orientation[0]; // rotation autour de Z (gauche/droite)
+            float pitch   = orientation[1]; // rotation autour de X (avant/arrière)
+
+            if (!Float.isNaN(lastAzimuth)) {
+                float deltaAzimuth = azimuth - lastAzimuth;
+                float deltaPitch   = pitch   - lastPitch;
+
+                // Gestion du wrap-around (passage par ±π)
+                if (deltaAzimuth >  Math.PI) deltaAzimuth -= (float)(2 * Math.PI);
+                if (deltaAzimuth < -Math.PI) deltaAzimuth += (float)(2 * Math.PI);
+
+                final float dY = deltaAzimuth;
+                final float dX = deltaPitch;
+                mainHandler.post(() -> {
+                    if (globeWebView != null) {
+                        globeWebView.evaluateJavascript(
+                            "applyGyroRotation(" + dY + "," + dX + ")", null);
+                    }
+                });
+            }
+
+            lastAzimuth = azimuth;
+            lastPitch   = pitch;
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+    };
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -82,10 +133,15 @@ public class GlobeFragment extends Fragment {
         });
         viewModel.loadRaces(2026);
 
+        // Initialisation du capteur (avant setupGyroButton)
+        sensorManager = (SensorManager) requireContext().getSystemService(Context.SENSOR_SERVICE);
+        rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+
         configureWebView();
         loadGlobe();
         setupOpacitySlider(view);
         setupRotationButton(view);
+        setupGyroButton(view);
         setupLogoText(view);
         registerBackHandler();
 
@@ -197,6 +253,40 @@ public class GlobeFragment extends Fragment {
         });
     }
 
+    private void setupGyroButton(View view) {
+        FloatingActionButton btnGyro = view.findViewById(R.id.btnGyro);
+        if (btnGyro == null) return;
+
+        if (rotationSensor == null) {
+            btnGyro.setVisibility(View.GONE);
+            return;
+        }
+
+        btnGyro.setOnClickListener(v -> {
+            isGyroEnabled = !isGyroEnabled;
+            lastAzimuth = Float.NaN;
+            lastPitch   = Float.NaN;
+
+            globeWebView.evaluateJavascript("setGyroMode(" + isGyroEnabled + ")", null);
+
+            android.content.res.ColorStateList activeList   = android.content.res.ColorStateList.valueOf(Color.parseColor("#FF3030"));
+            android.content.res.ColorStateList inactiveList = android.content.res.ColorStateList.valueOf(Color.parseColor("#888888"));
+            btnGyro.setImageTintList(isGyroEnabled ? activeList : inactiveList);
+            btnGyro.setStrokeColor(isGyroEnabled
+                ? android.content.res.ColorStateList.valueOf(Color.parseColor("#55FF3030"))
+                : android.content.res.ColorStateList.valueOf(Color.parseColor("#33888888")));
+
+            if (isGyroEnabled) {
+                sensorManager.registerListener(gyroListener, rotationSensor,
+                    SensorManager.SENSOR_DELAY_GAME);
+                Toast.makeText(requireContext(), "Gyroscope activé", Toast.LENGTH_SHORT).show();
+            } else {
+                sensorManager.unregisterListener(gyroListener);
+                Toast.makeText(requireContext(), "Gyroscope désactivé", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     private void setupOpacitySlider(View view) {
         opacitySeekBar = view.findViewById(R.id.opacitySeekBar);
         opacityValue   = view.findViewById(R.id.opacityValue);
@@ -232,17 +322,22 @@ public class GlobeFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (globeWebView != null) { globeWebView.onResume(); globeWebView.resumeTimers(); }
+        if (isGyroEnabled && sensorManager != null && rotationSensor != null) {
+            sensorManager.registerListener(gyroListener, rotationSensor, SensorManager.SENSOR_DELAY_GAME);
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
         if (globeWebView != null) { globeWebView.onPause(); globeWebView.pauseTimers(); }
+        if (sensorManager != null) sensorManager.unregisterListener(gyroListener);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (sensorManager != null) sensorManager.unregisterListener(gyroListener);
         if (globeWebView != null) globeWebView.destroy();
     }
 }

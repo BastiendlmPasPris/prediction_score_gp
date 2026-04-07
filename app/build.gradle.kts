@@ -68,6 +68,7 @@ dependencies {
     // CardView / RecyclerView
     implementation(libs.cardview)
     implementation(libs.recyclerview)
+    implementation(libs.viewpager2)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

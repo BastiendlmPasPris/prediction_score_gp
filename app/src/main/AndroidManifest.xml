@@ -34,7 +34,6 @@
         <activity android:name=".ui.profile.ProfileActivity" android:exported="false" />
         <activity android:name=".ui.admin.AdminActivity" android:exported="false" />
 
-        <!-- MainActivity conservée mais non utilisée comme launcher -->
         <activity android:name=".MainActivity" android:exported="false" />
     </application>
 

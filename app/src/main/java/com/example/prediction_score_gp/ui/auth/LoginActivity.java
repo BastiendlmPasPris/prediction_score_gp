@@ -16,7 +16,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.prediction_score_gp.R;
 import com.example.prediction_score_gp.data.api.RetrofitClient; // <--- AJOUTÉ
-import com.example.prediction_score_gp.ui.dashboard.DashboardActivity;
+import com.example.prediction_score_gp.MainActivity;
 import com.example.prediction_score_gp.viewmodel.AuthViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -78,7 +78,7 @@ public class LoginActivity extends AppCompatActivity {
                 RetrofitClient.setToken(user.getToken());
 
                 // On peut maintenant naviguer en toute sécurité
-                startActivity(new Intent(this, DashboardActivity.class));
+                startActivity(new Intent(this, MainActivity.class));
                 finish();
             }
         });

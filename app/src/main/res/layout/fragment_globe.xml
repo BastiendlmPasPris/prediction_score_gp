@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0A0A">
+
+    <View
+        android:id="@+id/statusBarSpacer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#0A0A0A"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tvLogo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="12dp"
+        android:fontFamily="monospace"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/statusBarSpacer" />
+
+    <LinearLayout
+        android:id="@+id/opacityPanel"
+        android:layout_width="160dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvLogo"
+        app:layout_constraintBottom_toBottomOf="@+id/tvLogo">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:fontFamily="monospace"
+            android:letterSpacing="0.12"
+            android:text="MAP"
+            android:textColor="#66FF3030"
+            android:textSize="10sp" />
+
+        <SeekBar
+            android:id="@+id/opacitySeekBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="100"
+            android:progress="100"
+            android:progressTint="#AAFF3030"
+            android:thumbTint="#FF3030" />
+
+        <TextView
+            android:id="@+id/opacityValue"
+            android:layout_width="36dp"
+            android:layout_height="wrap_content"
+            android:text="100%"
+            android:textColor="#66FF3030"
+            android:fontFamily="monospace"
+            android:textSize="10sp"
+            android:layout_marginStart="6dp"
+            android:gravity="end" />
+
+    </LinearLayout>
+
+    <WebView
+        android:id="@+id/globeWebView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layerType="hardware"
+        android:background="#00000000"
+        android:overScrollMode="never"
+        app:layout_constraintTop_toBottomOf="@+id/tvLogo"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <TextView
+        android:id="@+id/tvSelectRace"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:text="Select a future race"
+        android:fontFamily="monospace"
+        android:textSize="20sp"
+        android:textColor="#888888"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btnRotate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="Toggle rotation"
+        android:src="@drawable/ic_pause"
+        app:backgroundTint="#0A0A0A"
+        app:borderWidth="0dp"
+        app:elevation="4dp"
+        app:fabSize="mini"
+        app:tint="#FF3030"
+        app:rippleColor="#33FF3030"
+        app:strokeColor="#55FF3030"
+        app:strokeWidth="1dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cityCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="invisible"
+        app:cardBackgroundColor="#111111"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="12dp"
+        app:strokeColor="#FF3030"
+        app:strokeWidth="1dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <View
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:background="@drawable/red_dot" />
+
+                <TextView
+                    android:id="@+id/cityNameText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="MONACO"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:fontFamily="monospace"
+                    android:letterSpacing="0.05"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/raceInfoText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="22dp"
+                android:text="Details de la course..."
+                android:textColor="#888888"
+                android:textSize="12sp"
+                android:fontFamily="monospace" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGoToPredict"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="16dp"
+                android:text="PREDICT"
+                android:textColor="#FFFFFF"
+                android:fontFamily="monospace"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                app:backgroundTint="#FF3030"
+                app:cornerRadius="8dp" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0A0A">
+
+    <View
+        android:id="@+id/statusBarSpacer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#0A0A0A"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
+        android:text="Podium"
+        android:textColor="#E0E0E0"
+        android:fontFamily="monospace"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/statusBarSpacer" />
+
+    <TextView
+        android:id="@+id/tvSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="4dp"
+        android:text="Prediction of potential Podium"
+        android:textColor="#555555"
+        android:fontFamily="monospace"
+        android:textSize="13sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
+
+    <Spinner
+        android:id="@+id/spinnerRace"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/spinner_bg"
+        android:popupBackground="#1A1A1A"
+        android:spinnerMode="dropdown"
+        android:dropDownHeight="350dp"
+        app:layout_constraintTop_toBottomOf="@+id/tvSubtitle" />
+
+    <LinearLayout
+        android:id="@+id/podiumLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="bottom|center_horizontal"
+        android:paddingHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/spinnerRace">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardP2"
+            android:layout_width="0dp"
+            android:layout_height="120dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            app:cardBackgroundColor="#1A1A1A"
+            app:strokeColor="#C0C0C0"
+            app:strokeWidth="2dp"
+            app:cardCornerRadius="8dp">
+            <LinearLayout android:orientation="vertical" android:gravity="center" android:layout_width="match_parent" android:layout_height="match_parent">
+                <TextView android:text="2" android:textSize="24sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <TextView android:id="@+id/tvP2Name" android:text=" " android:textColor="@color/white" android:textStyle="bold" android:fontFamily="monospace" android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center"/>
+                <View android:id="@+id/colorP2" android:layout_width="30dp" android:layout_height="4dp" android:layout_marginTop="8dp" android:background="#888888"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardP1"
+            android:layout_width="0dp"
+            android:layout_height="160dp"
+            android:layout_weight="1.2"
+            android:layout_marginHorizontal="4dp"
+            app:cardBackgroundColor="#1A1A1A"
+            app:strokeColor="#FFD700"
+            app:strokeWidth="3dp"
+            app:cardCornerRadius="8dp">
+            <LinearLayout android:orientation="vertical" android:gravity="center" android:layout_width="match_parent" android:layout_height="match_parent">
+                <TextView android:text="1" android:textSize="32sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <TextView android:id="@+id/tvP1Name" android:text="Select a race" android:textColor="@color/white" android:textStyle="bold" android:textSize="16sp" android:fontFamily="monospace" android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center"/>
+                <TextView android:text="Vainqueur" android:textColor="#FFD700" android:textSize="10sp" android:fontFamily="monospace" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <View android:id="@+id/colorP1" android:layout_width="40dp" android:layout_height="4dp" android:layout_marginTop="8dp" android:background="#888888"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardP3"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            app:cardBackgroundColor="#1A1A1A"
+            app:strokeColor="#CD7F32"
+            app:strokeWidth="2dp"
+            app:cardCornerRadius="8dp">
+            <LinearLayout android:orientation="vertical" android:gravity="center" android:layout_width="match_parent" android:layout_height="match_parent">
+                <TextView android:text="3" android:textSize="20sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <TextView android:id="@+id/tvP3Name" android:text=" " android:textColor="@color/white" android:textStyle="bold" android:fontFamily="monospace" android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center"/>
+                <View android:id="@+id/colorP3" android:layout_width="30dp" android:layout_height="4dp" android:layout_marginTop="8dp" android:background="#888888"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvStandings"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/podiumLayout"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,34 +4,39 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.prediction_score_gp.R;
 import com.example.prediction_score_gp.data.model.Race;
+import com.example.prediction_score_gp.ui.BaseActivity;
 import com.example.prediction_score_gp.ui.dashboard.DashboardActivity;
 import com.example.prediction_score_gp.ui.profile.ProfileActivity;
 import com.example.prediction_score_gp.ui.standings.StandingsActivity;
+import com.example.prediction_score_gp.util.HapticHelper;
+import com.example.prediction_score_gp.util.SwipeNavigationHelper;
 import com.example.prediction_score_gp.viewmodel.DashboardViewModel;
 import com.example.prediction_score_gp.viewmodel.PredictionViewModel;
 
 import java.util.ArrayList;
 
-public class PredictionActivity extends AppCompatActivity {
+public class PredictionActivity extends BaseActivity {
 
     private RaceAdapter raceAdapter;
     private DashboardViewModel dashboardViewModel;
     private PredictionViewModel predictionViewModel;
+    private SwipeRefreshLayout swipeRefresh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +52,9 @@ public class PredictionActivity extends AppCompatActivity {
         setupWindowInsets();
         setupRecyclerView();
         setupViewModels();
+        setupSwipeRefresh();
         setupNavBar();
+        setupSwipeNavigation();
 
         // Charger les courses de la saison en cours
         dashboardViewModel.loadRaces(2024);
@@ -83,24 +90,40 @@ public class PredictionActivity extends AppCompatActivity {
         rvRaces.setAdapter(raceAdapter);
     }
 
+    // ── SwipeRefreshLayout ───────────────────────────────────────────
+    private void setupSwipeRefresh() {
+        swipeRefresh = findViewById(R.id.swipeRefreshRaces);
+        if (swipeRefresh == null) return;
+        swipeRefresh.setColorSchemeColors(Color.parseColor("#FF3030"));
+        swipeRefresh.setProgressBackgroundColorSchemeColor(Color.parseColor("#1A1A1A"));
+        swipeRefresh.setOnRefreshListener(() -> {
+            HapticHelper.tap(swipeRefresh);
+            dashboardViewModel.loadRaces(2024);
+        });
+    }
+
     // ── ViewModels ────────────────────────────────────────────────────
     private void setupViewModels() {
         dashboardViewModel  = new ViewModelProvider(this).get(DashboardViewModel.class);
         predictionViewModel = new ViewModelProvider(this).get(PredictionViewModel.class);
 
         dashboardViewModel.racesLiveData.observe(this, races -> {
+            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
             if (races != null) raceAdapter.updateData(races);
         });
 
         dashboardViewModel.errorLiveData.observe(this, error -> {
+            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
             if (error != null) Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
         });
 
         predictionViewModel.predictionLiveData.observe(this, prediction -> {
             if (prediction != null) {
-                String msg = prediction.getDriver()
-                        + " → position " + prediction.getPredictedPosition()
-                        + " (" + Math.round(prediction.getPodiumProbability() * 100) + "% podium)";
+                String msg = getString(R.string.prediction_result_format,
+                        prediction.getDriver(),
+                        prediction.getPredictedPosition(),
+                        Math.round(prediction.getPodiumProbability() * 100));
+                HapticHelper.confirm(findViewById(R.id.rootLayout));
                 Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
             }
         });
@@ -112,12 +135,35 @@ public class PredictionActivity extends AppCompatActivity {
 
     // ── Ouvrir le BottomSheet ────────────────────────────────────────
     private void openRaceSheet(Race race) {
+        HapticHelper.tap(findViewById(R.id.rootLayout));
         RaceBottomSheet sheet = RaceBottomSheet.newInstance(race);
 
         sheet.setOnPredictListener((selectedRace, driverName) ->
-                predictionViewModel.predict(selectedRace.getId(), 0));  // driver_id résolu via liste
+                predictionViewModel.predict(selectedRace.getId(), 0));
 
         sheet.show(getSupportFragmentManager(), RaceBottomSheet.class.getSimpleName());
+    }
+
+    // ── Navigation par swipe ──────────────────────────────────────────
+    private void setupSwipeNavigation() {
+        View rootLayout = findViewById(R.id.rootLayout);
+        SwipeNavigationHelper.attach(rootLayout, new SwipeNavigationHelper.OnSwipeCallback() {
+            @Override
+            public void onSwipeLeft() {   // → Podium (onglet suivant)
+                HapticHelper.tap(rootLayout);
+                startActivity(new Intent(PredictionActivity.this, StandingsActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+            }
+
+            @Override
+            public void onSwipeRight() { // → Globe (onglet précédent)
+                HapticHelper.tap(rootLayout);
+                startActivity(new Intent(PredictionActivity.this, DashboardActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+            }
+        });
     }
 
     // ── Navbar ───────────────────────────────────────────────────────
@@ -140,6 +186,7 @@ public class PredictionActivity extends AppCompatActivity {
             if (tabView == null) continue;
 
             tabView.setOnClickListener(v -> {
+                HapticHelper.tap(v);
                 if (tab[0] == R.id.tabPredict) return;
 
                 for (int[] t : tabs) {

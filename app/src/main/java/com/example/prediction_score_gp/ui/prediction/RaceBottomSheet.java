@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 
 import com.example.prediction_score_gp.R;
 import com.example.prediction_score_gp.data.model.Race;
+import com.example.prediction_score_gp.util.HapticHelper;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
 
@@ -41,7 +42,7 @@ public class RaceBottomSheet extends BottomSheetDialogFragment {
         this.predictListener = listener;
     }
 
-    // ── Factory — sérialise la Race dans le Bundle ───────────────────
+    // ── Factory ─────────────────────────────────────────────────────
     public static RaceBottomSheet newInstance(Race race) {
         RaceBottomSheet sheet = new RaceBottomSheet();
         Bundle args = new Bundle();
@@ -79,25 +80,18 @@ public class RaceBottomSheet extends BottomSheetDialogFragment {
         ((TextView) view.findViewById(R.id.bsRaceName)).setText(args.getString(ARG_NAME));
         ((TextView) view.findViewById(R.id.bsCircuit)) .setText(args.getString(ARG_CIRCUIT));
         ((TextView) view.findViewById(R.id.bsDate))    .setText(args.getString(ARG_DATE));
-
-        // Saison dans le champ laps (Race n'a pas laps/distance — on affiche la saison)
         ((TextView) view.findViewById(R.id.bsLaps))    .setText(String.valueOf(args.getInt(ARG_SEASON)));
-        // Distance : pays
         ((TextView) view.findViewById(R.id.bsDistance)).setText(args.getString(ARG_COUNTRY));
-
-        // ── Mettre à jour les labels pour correspondre aux champs Race ──
-        // (optionnel : renommer les labels dans le XML si vous voulez)
-        // Les vues bsLaps et bsDistance affichent Saison et Pays ici
 
         // ── Spinner pilotes ──────────────────────────────────────────
         Spinner spinner = view.findViewById(R.id.bsSpinnerDriver);
+        String chooseHint = getString(R.string.driver_choose_hint);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 requireContext(),
                 android.R.layout.simple_spinner_item,
-                getDriverList()
+                getDriverList(chooseHint)
         ) {
-            // Force la couleur du texte de l'item sélectionné
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 TextView tv = (TextView) super.getView(position, convertView, parent);
@@ -105,7 +99,6 @@ public class RaceBottomSheet extends BottomSheetDialogFragment {
                 return tv;
             }
 
-            // Force la couleur du texte dans la liste déroulante
             @Override
             public View getDropDownView(int position, View convertView, ViewGroup parent) {
                 TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
@@ -121,14 +114,14 @@ public class RaceBottomSheet extends BottomSheetDialogFragment {
         // ── Bouton PREDICT ───────────────────────────────────────────
         MaterialButton btnPredict = view.findViewById(R.id.bsBtnPredict);
         btnPredict.setOnClickListener(v -> {
+            HapticHelper.confirm(v);
             String selectedDriver = (String) spinner.getSelectedItem();
-            if (selectedDriver == null || selectedDriver.equals("— Choisir un pilote —")) {
+            if (selectedDriver == null || selectedDriver.equals(chooseHint)) {
                 Toast.makeText(requireContext(),
-                        "Sélectionne un pilote", Toast.LENGTH_SHORT).show();
+                        getString(R.string.error_select_driver), Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Reconstruire l'objet Race depuis le Bundle
             Race race = new Race();
             race.setId     (args.getInt   (ARG_ID));
             race.setFlagUrl(args.getString(ARG_FLAG));
@@ -146,10 +139,9 @@ public class RaceBottomSheet extends BottomSheetDialogFragment {
     }
 
     // ── Liste pilotes ────────────────────────────────────────────────
-    // TODO : injecter depuis le ViewModel
-    private List<String> getDriverList() {
+    private List<String> getDriverList(String chooseHint) {
         return List.of(
-                "— Choisir un pilote —",
+                chooseHint,
                 "L. Norris",
                 "M. Verstappen",
                 "O. Piastri",

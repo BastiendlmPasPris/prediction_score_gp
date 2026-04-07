@@ -5,6 +5,11 @@
     <!-- Permission réseau pour Retrofit -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Capteur de luminosité (déclaré mais pas requis — l'app fonctionne sans) -->
+    <uses-feature
+        android:name="android.hardware.sensor.light"
+        android:required="false" />
+
     <application
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
@@ -15,7 +20,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Prediction_score_gp"
-        android:hardwareAccelerated="true">   <!-- ← OBLIGATOIRE pour Three.js dans WebView -->
+        android:hardwareAccelerated="true"
+        tools:targetApi="31">
+
         <!-- Écran de démarrage : Login -->
         <activity
             android:name=".ui.auth.LoginActivity"
@@ -26,16 +33,15 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ui.auth.RegisterActivity" android:exported="false" />
+        <activity android:name=".ui.auth.RegisterActivity"   android:exported="false" />
         <activity android:name=".ui.dashboard.DashboardActivity" android:exported="false" />
         <activity android:name=".ui.prediction.PredictionActivity" android:exported="false" />
         <activity android:name=".ui.standings.StandingsActivity" android:exported="false" />
         <activity android:name=".ui.stats.DriverStatsActivity" android:exported="false" />
-        <activity android:name=".ui.profile.ProfileActivity" android:exported="false" />
-        <activity android:name=".ui.admin.AdminActivity" android:exported="false" />
+        <activity android:name=".ui.profile.ProfileActivity"  android:exported="false" />
+        <activity android:name=".ui.admin.AdminActivity"      android:exported="false" />
+        <activity android:name=".MainActivity"                android:exported="false" />
 
-        <!-- MainActivity conservée mais non utilisée comme launcher -->
-        <activity android:name=".MainActivity" android:exported="false" />
     </application>
 
 </manifest>

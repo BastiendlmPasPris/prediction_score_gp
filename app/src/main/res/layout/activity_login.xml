@@ -7,13 +7,13 @@
     android:padding="32dp"
     android:gravity="center">
 
-    <!-- TODO: Logo F1 Predict -->
+    <!-- Logo F1 Predict -->
     <ImageView
         android:id="@+id/imgLogo"
         android:layout_width="150dp"
         android:layout_height="80dp"
         android:layout_marginBottom="40dp"
-        android:contentDescription="F1 Predict Logo" />
+        android:contentDescription="@string/content_desc_logo" />
 
     <!-- Champ Email -->
     <com.google.android.material.textfield.TextInputLayout
@@ -25,7 +25,7 @@
             android:id="@+id/etEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Email"
+            android:hint="@string/hint_email"
             android:inputType="textEmailAddress" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -41,7 +41,7 @@
             android:id="@+id/etPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Mot de passe"
+            android:hint="@string/hint_password"
             android:inputType="textPassword" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -50,7 +50,7 @@
         android:id="@+id/btnLogin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Se connecter"
+        android:text="@string/btn_login"
         android:backgroundTint="@color/f1_red"
         android:layout_marginBottom="16dp" />
 
@@ -67,7 +67,7 @@
         android:id="@+id/tvRegister"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Créer un compte"
+        android:text="@string/tv_register_link"
         android:textColor="@color/f1_red"
         android:textSize="14sp" />
 

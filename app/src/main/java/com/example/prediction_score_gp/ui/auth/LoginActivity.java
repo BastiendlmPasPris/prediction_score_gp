@@ -7,17 +7,18 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.prediction_score_gp.R;
 import com.example.prediction_score_gp.data.local.SessionManager;
+import com.example.prediction_score_gp.ui.BaseActivity;
 import com.example.prediction_score_gp.ui.dashboard.DashboardActivity;
+import com.example.prediction_score_gp.util.HapticHelper;
 import com.example.prediction_score_gp.viewmodel.AuthViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends BaseActivity {
 
     private AuthViewModel viewModel;
     private TextInputEditText etEmail, etPassword;
@@ -28,7 +29,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Restaurer le token persisté dans RetrofitClient
+        // Restaurer le token persisté et l'URL API dans RetrofitClient
         SessionManager.restoreToken(this);
 
         // Auto-login si session existante
@@ -49,6 +50,7 @@ public class LoginActivity extends AppCompatActivity {
         viewModel.userLiveData.observe(this, user -> {
             if (user != null) {
                 SessionManager.save(this, user);
+                HapticHelper.confirm(btnLogin);
                 goToDashboard();
             }
         });
@@ -64,11 +66,12 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         btnLogin.setOnClickListener(v -> {
+            HapticHelper.tap(v);
             String email    = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
             String password = etPassword.getText() != null ? etPassword.getText().toString().trim() : "";
 
             if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Veuillez remplir tous les champs", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.error_fill_all_fields), Toast.LENGTH_SHORT).show();
                 return;
             }
             viewModel.login(email, password);
@@ -76,8 +79,10 @@ public class LoginActivity extends AppCompatActivity {
 
         TextView tvRegister = findViewById(R.id.tvRegister);
         if (tvRegister != null) {
-            tvRegister.setOnClickListener(v ->
-                    startActivity(new Intent(this, RegisterActivity.class)));
+            tvRegister.setOnClickListener(v -> {
+                HapticHelper.tap(v);
+                startActivity(new Intent(this, RegisterActivity.class));
+            });
         }
     }
 

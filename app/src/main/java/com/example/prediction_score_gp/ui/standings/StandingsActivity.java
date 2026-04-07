@@ -9,31 +9,35 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.prediction_score_gp.R;
 import com.example.prediction_score_gp.data.model.Driver;
 import com.example.prediction_score_gp.data.model.Prediction;
+import com.example.prediction_score_gp.ui.BaseActivity;
 import com.example.prediction_score_gp.ui.dashboard.DashboardActivity;
 import com.example.prediction_score_gp.ui.prediction.PredictionActivity;
 import com.example.prediction_score_gp.ui.profile.ProfileActivity;
+import com.example.prediction_score_gp.util.HapticHelper;
+import com.example.prediction_score_gp.util.SwipeNavigationHelper;
 import com.example.prediction_score_gp.viewmodel.DashboardViewModel;
 import com.example.prediction_score_gp.viewmodel.PredictionViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class StandingsActivity extends AppCompatActivity {
+public class StandingsActivity extends BaseActivity {
 
     private StandingsAdapter adapter;
     private PredictionViewModel predictionViewModel;
     private DashboardViewModel dashboardViewModel;
+    private SwipeRefreshLayout swipeRefresh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +53,9 @@ public class StandingsActivity extends AppCompatActivity {
         setupWindowInsets();
         setupRecyclerView();
         setupViewModels();
+        setupSwipeRefresh();
         setupNavBar();
+        setupSwipeNavigation();
 
         // Charger la dernière saison disponible puis prédire
         dashboardViewModel.loadRaces(2024);
@@ -85,12 +91,23 @@ public class StandingsActivity extends AppCompatActivity {
         rvStandings.setAdapter(adapter);
     }
 
+    // ── SwipeRefreshLayout ───────────────────────────────────────────
+    private void setupSwipeRefresh() {
+        swipeRefresh = findViewById(R.id.swipeRefreshStandings);
+        if (swipeRefresh == null) return;
+        swipeRefresh.setColorSchemeColors(Color.parseColor("#FF3030"));
+        swipeRefresh.setProgressBackgroundColorSchemeColor(Color.parseColor("#1A1A1A"));
+        swipeRefresh.setOnRefreshListener(() -> {
+            HapticHelper.tap(swipeRefresh);
+            dashboardViewModel.loadRaces(2024);
+        });
+    }
+
     // ── ViewModels ────────────────────────────────────────────────────
     private void setupViewModels() {
         predictionViewModel = new ViewModelProvider(this).get(PredictionViewModel.class);
         dashboardViewModel  = new ViewModelProvider(this).get(DashboardViewModel.class);
 
-        // Quand les courses sont chargées, prédire pour la course la plus récente
         dashboardViewModel.racesLiveData.observe(this, races -> {
             if (races != null && !races.isEmpty()) {
                 int lastRaceId = races.get(races.size() - 1).getId();
@@ -99,24 +116,27 @@ public class StandingsActivity extends AppCompatActivity {
         });
 
         dashboardViewModel.errorLiveData.observe(this, error -> {
-            if (error != null) Toast.makeText(this, "Courses : " + error, Toast.LENGTH_SHORT).show();
+            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
+            if (error != null) Toast.makeText(this,
+                    getString(R.string.error_races_prefix) + error, Toast.LENGTH_SHORT).show();
         });
 
-        // Quand les prédictions arrivent, mettre à jour l'adaptateur
         predictionViewModel.standingsLiveData.observe(this, predictions -> {
+            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
             if (predictions != null) {
                 adapter.updateData(predictionsToDrivers(predictions));
             }
         });
 
         predictionViewModel.errorLiveData.observe(this, error -> {
-            if (error != null) Toast.makeText(this, "Prédictions : " + error, Toast.LENGTH_SHORT).show();
+            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
+            if (error != null) Toast.makeText(this,
+                    getString(R.string.error_predictions_prefix) + error, Toast.LENGTH_SHORT).show();
         });
     }
 
     /**
      * Convertit une liste de Prediction en liste de Driver ordonnée par position prédite.
-     * Le champ Prediction.driver est une chaîne "Prénom Nom" fournie par l'API.
      */
     private List<Driver> predictionsToDrivers(List<Prediction> predictions) {
         List<Prediction> sorted = new ArrayList<>(predictions);
@@ -125,7 +145,6 @@ public class StandingsActivity extends AppCompatActivity {
         List<Driver> drivers = new ArrayList<>();
         for (Prediction p : sorted) {
             Driver d = new Driver();
-            // L'API retourne le nom complet dans le champ "driver"
             String[] parts = p.getDriver() != null ? p.getDriver().split(" ", 2) : new String[]{"?", ""};
             d.setFirstName(parts[0]);
             d.setLastName(parts.length > 1 ? parts[1] : "");
@@ -137,8 +156,31 @@ public class StandingsActivity extends AppCompatActivity {
 
     // ── Ouvrir le BottomSheet pilote ─────────────────────────────────
     private void openDriverSheet(Driver driver, int position) {
+        HapticHelper.tap(findViewById(R.id.rootLayout));
         DriverBottomSheet sheet = DriverBottomSheet.newInstance(driver, position);
         sheet.show(getSupportFragmentManager(), DriverBottomSheet.class.getSimpleName());
+    }
+
+    // ── Navigation par swipe ──────────────────────────────────────────
+    private void setupSwipeNavigation() {
+        View rootLayout = findViewById(R.id.rootLayout);
+        SwipeNavigationHelper.attach(rootLayout, new SwipeNavigationHelper.OnSwipeCallback() {
+            @Override
+            public void onSwipeLeft() {  // → Profile (onglet suivant)
+                HapticHelper.tap(rootLayout);
+                startActivity(new Intent(StandingsActivity.this, ProfileActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+            }
+
+            @Override
+            public void onSwipeRight() { // → Predict (onglet précédent)
+                HapticHelper.tap(rootLayout);
+                startActivity(new Intent(StandingsActivity.this, PredictionActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+            }
+        });
     }
 
     // ── Navbar ───────────────────────────────────────────────────────
@@ -161,6 +203,7 @@ public class StandingsActivity extends AppCompatActivity {
             if (tabView == null) continue;
 
             tabView.setOnClickListener(v -> {
+                HapticHelper.tap(v);
                 if (tab[0] == R.id.tabPodium) return;
 
                 for (int[] t : tabs) {

@@ -1,10 +1,11 @@
 package com.example.prediction_score_gp.ui.admin;
 
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
-import com.example.prediction_score_gp.R;
 
-public class AdminActivity extends AppCompatActivity {
+import com.example.prediction_score_gp.R;
+import com.example.prediction_score_gp.ui.BaseActivity;
+
+public class AdminActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

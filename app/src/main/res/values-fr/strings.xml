@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Traductions françaises — seules les chaînes différentes de l'anglais sont listées -->
+<resources>
+    <!-- ── Login ──────────────────────────────────────────────── -->
+    <string name="hint_password">Mot de passe</string>
+    <string name="btn_login">Se connecter</string>
+    <string name="tv_register_link">Créer un compte</string>
+    <string name="error_fill_all_fields">Veuillez remplir tous les champs</string>
+
+    <!-- ── Dashboard ─────────────────────────────────────────── -->
+    <string name="text_select_future_race">Sélectionner une course</string>
+    <string name="text_race_details_placeholder">Détails de la course…</string>
+
+    <!-- ── Prediction screen ──────────────────────────────────── -->
+    <string name="title_select_race">Choisir une course</string>
+    <string name="subtitle_prediction">Prédiction des résultats</string>
+    <string name="prediction_result_format">%1$s → position %2$d (%3$d%% podium)</string>
+
+    <!-- ── Standings / Podium ─────────────────────────────────── -->
+    <string name="subtitle_podium">Prédiction du podium potentiel</string>
+    <string name="error_races_prefix">Courses : </string>
+    <string name="error_predictions_prefix">Prédictions : </string>
+
+    <!-- ── Race Bottom Sheet ──────────────────────────────────── -->
+    <string name="label_season">SAISON</string>
+    <string name="label_country">PAYS</string>
+    <string name="driver_choose_hint">— Choisir un pilote —</string>
+    <string name="error_select_driver">Sélectionne un pilote</string>
+
+    <!-- ── Profile ────────────────────────────────────────────── -->
+    <string name="title_profile">Profil</string>
+    <string name="title_prediction_history">Historique des prédictions</string>
+    <string name="btn_logout">DÉCONNEXION</string>
+
+    <!-- ── Settings: language ────────────────────────────────── -->
+    <string name="title_settings">Paramètres</string>
+    <string name="label_language">Langue</string>
+
+    <!-- ── Settings: API URL ──────────────────────────────────── -->
+    <string name="msg_url_saved">URL sauvegardée – redémarrez l\'app</string>
+    <string name="msg_url_invalid">URL invalide</string>
+
+    <!-- ── Light sensor ───────────────────────────────────────── -->
+    <string name="msg_brightness_auto">Luminosité ajustée automatiquement</string>
+</resources>

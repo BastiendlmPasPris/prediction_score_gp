@@ -91,7 +91,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="DATE"
+                android:text="@string/label_date"
                 android:textColor="#444444"
                 android:fontFamily="monospace"
                 android:textSize="9sp"
@@ -120,7 +120,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SAISON"
+                android:text="@string/label_season"
                 android:textColor="#444444"
                 android:fontFamily="monospace"
                 android:textSize="9sp"
@@ -149,7 +149,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="PAYS"
+                android:text="@string/label_country"
                 android:textColor="#444444"
                 android:fontFamily="monospace"
                 android:textSize="9sp"
@@ -171,7 +171,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="PREDICT WINNER"
+        android:text="@string/label_predict_winner"
         android:textColor="#444444"
         android:fontFamily="monospace"
         android:textSize="10sp"
@@ -194,7 +194,7 @@
         android:id="@+id/bsBtnPredict"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:text="PREDICT"
+        android:text="@string/btn_predict"
         android:textColor="#FFFFFF"
         android:fontFamily="monospace"
         android:textSize="13sp"

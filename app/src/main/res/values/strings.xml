@@ -1,3 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">prediction_score_gp</string>
+
+    <!-- ── Login ──────────────────────────────────────────────── -->
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="btn_login">Log In</string>
+    <string name="tv_register_link">Create an account</string>
+    <string name="error_fill_all_fields">Please fill in all fields</string>
+
+    <!-- ── Navigation tabs ───────────────────────────────────── -->
+    <string name="tab_globe">GLOBE</string>
+    <string name="tab_predict">PREDICT</string>
+    <string name="tab_podium">PODIUM</string>
+    <string name="tab_driver">DRIVER</string>
+
+    <!-- ── Dashboard ─────────────────────────────────────────── -->
+    <string name="label_map">MAP</string>
+    <string name="text_select_future_race">Select a future race</string>
+    <string name="text_race_details_placeholder">Race details…</string>
+    <string name="btn_predict">PREDICT</string>
+    <string name="content_desc_toggle_rotation">Toggle rotation</string>
+
+    <!-- ── Prediction screen ──────────────────────────────────── -->
+    <string name="title_select_race">Select a race</string>
+    <string name="subtitle_prediction">Prediction of results</string>
+    <string name="prediction_result_format">%1$s → position %2$d (%3$d%% podium)</string>
+
+    <!-- ── Standings / Podium ─────────────────────────────────── -->
+    <string name="title_podium">Podium</string>
+    <string name="subtitle_podium">Prediction of potential Podium</string>
+    <string name="error_races_prefix">Races: </string>
+    <string name="error_predictions_prefix">Predictions: </string>
+
+    <!-- ── Race Bottom Sheet ──────────────────────────────────── -->
+    <string name="label_date">DATE</string>
+    <string name="label_season">SEASON</string>
+    <string name="label_country">COUNTRY</string>
+    <string name="label_predict_winner">PREDICT WINNER</string>
+    <string name="driver_choose_hint">— Choose a driver —</string>
+    <string name="error_select_driver">Please select a driver</string>
+
+    <!-- ── Profile ────────────────────────────────────────────── -->
+    <string name="title_profile">Profile</string>
+    <string name="title_prediction_history">Prediction History</string>
+    <string name="btn_logout">LOG OUT</string>
+
+    <!-- ── Settings: language ────────────────────────────────── -->
+    <string name="title_settings">Settings</string>
+    <string name="label_language">Language</string>
+    <string name="lang_english">EN</string>
+    <string name="lang_french">FR</string>
+
+    <!-- ── Settings: API URL ──────────────────────────────────── -->
+    <string name="label_api_url">API URL</string>
+    <string name="hint_api_url">http://server-ip:8000/</string>
+    <string name="btn_save_url">SAVE URL</string>
+    <string name="msg_url_saved">URL saved – restart the app</string>
+    <string name="msg_url_invalid">Invalid URL</string>
+
+    <!-- ── Light sensor ───────────────────────────────────────── -->
+    <string name="msg_brightness_auto">Brightness auto-adjusted</string>
+
+    <!-- ── Content descriptions ──────────────────────────────── -->
+    <string name="content_desc_logo">F1 Predict Logo</string>
+    <string name="content_desc_avatar">User avatar</string>
 </resources>

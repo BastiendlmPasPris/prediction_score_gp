@@ -4,6 +4,11 @@ package com.example.prediction_score_gp.ui.dashboard;
 //  DashBoardActivity.java
 //  Configure la WebView pour afficher le globe Three.js
 //  et reçoit les clics de villes via une JavascriptInterface.
+//
+//  Fonctionnalités Android spécifiques :
+//    • Capteur de luminosité ambiante → ajustement automatique de la luminosité
+//    • Navigation par swipe gauche/droite entre les onglets
+//    • Retour haptique sur les boutons
 // ─────────────────────────────────────────────────────────────────────────────
 
 import android.annotation.SuppressLint;
@@ -12,7 +17,9 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
@@ -20,45 +27,50 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-
 import android.widget.ImageView;
 import android.widget.SeekBar;
-import androidx.activity.OnBackPressedCallback;
-import androidx.appcompat.app.AppCompatActivity;
+import android.widget.TextView;
 
-import com.example.prediction_score_gp.R;
-import com.example.prediction_score_gp.ui.prediction.PredictionActivity;
-import com.example.prediction_score_gp.ui.profile.ProfileActivity;
-import com.example.prediction_score_gp.ui.standings.StandingsActivity;
-import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import android.view.ViewGroup;
-import android.widget.TextView;
- import android.text.SpannableString;
- import android.text.Spannable;
- import android.text.style.ForegroundColorSpan;
+
+import com.example.prediction_score_gp.R;
+import com.example.prediction_score_gp.ui.BaseActivity;
+import com.example.prediction_score_gp.ui.prediction.PredictionActivity;
+import com.example.prediction_score_gp.ui.profile.ProfileActivity;
+import com.example.prediction_score_gp.ui.standings.StandingsActivity;
+import com.example.prediction_score_gp.util.HapticHelper;
+import com.example.prediction_score_gp.util.LightSensorHelper;
+import com.example.prediction_score_gp.util.SwipeNavigationHelper;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import android.text.SpannableString;
+import android.text.Spannable;
+import android.text.style.ForegroundColorSpan;
 
 
-public class DashboardActivity extends AppCompatActivity {
+public class DashboardActivity extends BaseActivity {
 
     private WebView globeWebView;
     private MaterialCardView cityCard;
-    private TextView raceInfoText; // NOUVEAU
-    private com.google.android.material.button.MaterialButton btnGoToPredict; // NOUVEAU
+    private TextView raceInfoText;
+    private com.google.android.material.button.MaterialButton btnGoToPredict;
     private android.widget.TextView cityNameText;
     private SeekBar opacitySeekBar;
     private android.widget.TextView opacityValue;
 
+    // Capteur de luminosité ambiante
+    private LightSensorHelper lightSensorHelper;
+
     // Handler principal pour poster sur l'UI thread depuis le thread JS
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private Runnable hideCityCardRunnable;
     private boolean isGlobeRotating = true;
 
-
+    // Ordre des onglets : 0=Globe 1=Predict 2=Podium 3=Driver
+    private static final int TAB_INDEX = 0;
 
     // ─────────────────────────────────────────────────────────
     //  Création de l'Activity
@@ -92,10 +104,9 @@ public class DashboardActivity extends AppCompatActivity {
 
         raceInfoText = findViewById(R.id.raceInfoText);
         btnGoToPredict = findViewById(R.id.btnGoToPredict);
-        // Action du bouton Predict de la carte
         btnGoToPredict.setOnClickListener(v -> {
+            HapticHelper.tap(v);
             Intent intent = new Intent(DashboardActivity.this, PredictionActivity.class);
-            // Optionnel : Passer le nom de la ville à la page de prédiction
             intent.putExtra("SELECTED_CITY", cityNameText.getText().toString());
             startActivity(intent);
             overridePendingTransition(0, 0);
@@ -130,6 +141,24 @@ public class DashboardActivity extends AppCompatActivity {
 
         // ── Bouton pause/play rotation ────────────────────────────
         setupRotationButton();
+
+        // ── Capteur luminosité ────────────────────────────────────
+        lightSensorHelper = new LightSensorHelper(this, getWindow());
+
+        // ── Navigation par swipe ──────────────────────────────────
+        SwipeNavigationHelper.attach(rootLayout, new SwipeNavigationHelper.OnSwipeCallback() {
+            @Override
+            public void onSwipeLeft() {  // → Predict (onglet suivant)
+                HapticHelper.tap(rootLayout);
+                startActivity(new Intent(DashboardActivity.this, PredictionActivity.class));
+                overridePendingTransition(0, 0);
+            }
+
+            @Override
+            public void onSwipeRight() { // pas d'onglet précédent sur Globe
+                HapticHelper.tap(rootLayout);
+            }
+        });
     }
 
     private void setupNavBar() {
@@ -145,10 +174,11 @@ public class DashboardActivity extends AppCompatActivity {
 
         for (int[] tab : tabs) {
             View tabView = findViewById(tab[0]);
-            if (tabView == null) continue; // Sécurité si l'onglet n'existe pas dans ce layout
+            if (tabView == null) continue;
 
             tabView.setOnClickListener(v -> {
-                // 1. Réinitialiser tous les onglets
+                HapticHelper.tap(v);
+
                 for (int[] t : tabs) {
                     ImageView img = findViewById(t[1]);
                     TextView txt = findViewById(t[2]);
@@ -156,7 +186,6 @@ public class DashboardActivity extends AppCompatActivity {
                     if (txt != null) txt.setTextColor(inactiveColor);
                 }
 
-                // 2. Navigation
                 Intent intent = null;
                 if (tab[0] == R.id.tabPredict) {
                     intent = new Intent(this, PredictionActivity.class);
@@ -168,8 +197,7 @@ public class DashboardActivity extends AppCompatActivity {
 
                 if (intent != null) {
                     startActivity(intent);
-                    // finish()
-                    overridePendingTransition(0, 0); // Supprime l'animation pour un effet "onglet"
+                    overridePendingTransition(0, 0);
                 }
             });
         }
@@ -180,6 +208,7 @@ public class DashboardActivity extends AppCompatActivity {
         FloatingActionButton btnRotate = findViewById(R.id.btnRotate);
 
         btnRotate.setOnClickListener(v -> {
+            HapticHelper.tap(v);
             isGlobeRotating = !isGlobeRotating;
             globeWebView.evaluateJavascript("toggleRotation()", null);
             btnRotate.setImageResource(isGlobeRotating ? R.drawable.ic_pause : R.drawable.ic_play);
@@ -192,43 +221,24 @@ public class DashboardActivity extends AppCompatActivity {
     @SuppressLint({"SetJavaScriptEnabled", "JavascriptInterface"})
     private void configureWebView() {
         WebSettings settings = globeWebView.getSettings();
-
-        // ── JavaScript obligatoire pour Three.js ─────────────
         settings.setJavaScriptEnabled(true);
-
-        // ── Accès aux fichiers locaux (assets/) ──────────────
         settings.setAllowFileAccess(true);
-        settings.setAllowFileAccessFromFileURLs(true);  // requis pour charger des ressources locales
+        settings.setAllowFileAccessFromFileURLs(true);
         settings.setAllowUniversalAccessFromFileURLs(true);
-
-        // ── Performances ─────────────────────────────────────
         settings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-
-        // Accélération matérielle (déjà activée globalement dans AndroidManifest,
-        // mais on force le layer type au niveau de la View)
         globeWebView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-
-        // Fond transparent pour voir le background Android derrière
         globeWebView.setBackgroundColor(0x00000000);
-
-        // ── Réseau ───────────────────────────────────────────
-        // Autorise le chargement de contenus mixtes (texture NASA via HTTPS)
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-
-        // ── DOM Storage (utile pour Three.js loaders) ────────
         settings.setDomStorageEnabled(true);
 
-        // ── WebViewClient : intercepte les navigations ───────
         globeWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                // Bloquer toute navigation externe (sécurité)
-                return true;
+                return true; // bloque toute navigation externe
             }
         });
 
-        // ── WebChromeClient : capture console.log pour debug ─
         globeWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onConsoleMessage(android.webkit.ConsoleMessage cm) {
@@ -238,8 +248,6 @@ public class DashboardActivity extends AppCompatActivity {
             }
         });
 
-        // ── JavascriptInterface ───────────────────────────────
-        // Le nom "Android" doit correspondre exactement à window.Android dans le JS
         globeWebView.addJavascriptInterface(new GlobeJSInterface(), "Android");
     }
 
@@ -247,13 +255,11 @@ public class DashboardActivity extends AppCompatActivity {
     //  Chargement de l'HTML depuis les assets
     // ─────────────────────────────────────────────────────────
     private void loadGlobe() {
-        // Charge index.html depuis app/src/main/assets/
         globeWebView.loadUrl("file:///android_asset/index.html");
     }
 
     // ─────────────────────────────────────────────────────────
     //  JavascriptInterface
-    //  Méthode appelée depuis JS : window.Android.onCityClick("Paris")
     // ─────────────────────────────────────────────────────────
     private class GlobeJSInterface {
         @JavascriptInterface
@@ -263,7 +269,6 @@ public class DashboardActivity extends AppCompatActivity {
 
         @JavascriptInterface
         public void onMapClick() {
-            // Appelé quand on clique dans l'océan ou l'espace
             mainHandler.post(() -> hideCityInfo());
         }
 
@@ -277,12 +282,9 @@ public class DashboardActivity extends AppCompatActivity {
     //  Affichage permanent de la carte
     // ─────────────────────────────────────────────────────────
     private void showCityInfo(String cityName) {
-        // Mettre à jour les textes
         cityNameText.setText(cityName + " GP");
-        // TODO: Mettre une vraie date selon la ville (ex: switch case)
-        raceInfoText.setText("Race details for " + cityName);
+        raceInfoText.setText(getString(R.string.text_race_details_placeholder));
 
-        // Afficher avec animation seulement si elle est cachée
         if (cityCard.getVisibility() != View.VISIBLE || cityCard.getAlpha() < 1f) {
             cityCard.setVisibility(View.VISIBLE);
             cityCard.setAlpha(0f);
@@ -293,6 +295,7 @@ public class DashboardActivity extends AppCompatActivity {
                     .setDuration(300)
                     .start();
         }
+        HapticHelper.tap(cityCard);
     }
 
     // ─────────────────────────────────────────────────────────
@@ -308,21 +311,24 @@ public class DashboardActivity extends AppCompatActivity {
                     .start();
         }
     }
+
     // ─────────────────────────────────────────────────────────
-    //  Cycle de vie : gestion de la WebView
+    //  Cycle de vie : gestion de la WebView + capteur
     // ─────────────────────────────────────────────────────────
     @Override
     protected void onResume() {
         super.onResume();
         globeWebView.onResume();
         globeWebView.resumeTimers();
+        if (lightSensorHelper != null) lightSensorHelper.start();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         globeWebView.onPause();
-        globeWebView.pauseTimers(); // Libère le CPU (animation Three.js stoppée)
+        globeWebView.pauseTimers();
+        if (lightSensorHelper != null) lightSensorHelper.stop();
     }
 
     @Override
@@ -341,18 +347,16 @@ public class DashboardActivity extends AppCompatActivity {
         opacitySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                // Appel JS : met à jour l'opacité de la texture Terre en temps réel
                 float opacity = progress / 100f;
-                globeWebView.evaluateJavascript(
-                        "setEarthOpacity(" + opacity + ")", null);
+                globeWebView.evaluateJavascript("setEarthOpacity(" + opacity + ")", null);
                 opacityValue.setText(progress + "%");
             }
-            @Override public void onStartTrackingTouch(SeekBar s) {}
+            @Override public void onStartTrackingTouch(SeekBar s) { HapticHelper.tap(s); }
             @Override public void onStopTrackingTouch(SeekBar s) {}
         });
     }
 
-    // Bouton Retour : gestion de la navigation WebView via OnBackPressedDispatcher
+    // Bouton Retour
     private void registerBackHandler() {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -360,12 +364,18 @@ public class DashboardActivity extends AppCompatActivity {
                 if (globeWebView.canGoBack()) {
                     globeWebView.goBack();
                 } else {
-                    // Désactiver ce callback et laisser le dispatcher gérer
-                    // le comportement par défaut (fermeture de l'Activity)
                     setEnabled(false);
                     getOnBackPressedDispatcher().onBackPressed();
                 }
             }
         });
+    }
+
+    // ─────────────────────────────────────────────────────────
+    //  Propagation des touch events (swipe + WebView)
+    // ─────────────────────────────────────────────────────────
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        return super.dispatchTouchEvent(event);
     }
 }

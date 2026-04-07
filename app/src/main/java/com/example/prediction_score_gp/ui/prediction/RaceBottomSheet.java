@@ -1,6 +1,10 @@
 package com.example.prediction_score_gp.ui.prediction;
 
+import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -157,11 +161,24 @@ public class RaceBottomSheet extends BottomSheetDialogFragment {
             race.setDate(args.getString(ARG_DATE));
             race.setSeason(args.getInt(ARG_SEASON));
 
+            vibrate();
+
             if (predictListener != null) {
                 predictListener.onPredict(race, selectedDriver.id);
             }
             dismiss();
         });
+    }
+
+    private void vibrate() {
+        Vibrator vib = (Vibrator) requireContext().getSystemService(Context.VIBRATOR_SERVICE);
+        if (vib == null || !vib.hasVibrator()) return;
+        // Double impulsion : 40ms — pause 60ms — 80ms
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vib.vibrate(VibrationEffect.createWaveform(new long[]{0, 40, 60, 80}, -1));
+        } else {
+            vib.vibrate(new long[]{0, 40, 60, 80}, -1);
+        }
     }
 
     private static class DriverOption {

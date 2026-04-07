@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.prediction_score_gp.R;
 import com.example.prediction_score_gp.data.model.Race;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RaceAdapter extends RecyclerView.Adapter<RaceAdapter.ViewHolder> {
@@ -19,17 +20,24 @@ public class RaceAdapter extends RecyclerView.Adapter<RaceAdapter.ViewHolder> {
         void onRaceClick(Race race);
     }
 
-    private List<Race> races;
+    // On utilise une liste modifiable pour pouvoir la rafraîchir avec l'API
+    private final List<Race> races;
     private final OnRaceClickListener listener;
 
-    public RaceAdapter(List<Race> races, OnRaceClickListener listener) {
-        this.races    = races;
+    public RaceAdapter(List<Race> initialRaces, OnRaceClickListener listener) {
+        // On copie dans une nouvelle ArrayList pour éviter les crashs (UnsupportedOperationException)
+        // si initialRaces est une liste verrouillée (comme List.of(...))
+        this.races = new ArrayList<>(initialRaces);
         this.listener = listener;
     }
 
-    public void updateData(List<Race> newRaces) {
-        this.races = newRaces;
-        notifyDataSetChanged();
+    // ── NOUVELLE MÉTHODE : Mettre à jour la liste depuis l'API ──────
+    public void updateRaces(List<Race> newRaces) {
+        this.races.clear();
+        if (newRaces != null) {
+            this.races.addAll(newRaces);
+        }
+        notifyDataSetChanged(); // Demande à l'écran de se redessiner avec les nouvelles données
     }
 
     @NonNull @Override
@@ -43,14 +51,17 @@ public class RaceAdapter extends RecyclerView.Adapter<RaceAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Race race = races.get(position);
 
-        holder.tvFlag.setText(race.getFlagUrl() != null ? race.getFlagUrl() : "🏁");
+        String flagEmoji = RaceBottomSheet.getFlagEmoji(race.getCountry());
+        holder.tvFlag.setText(flagEmoji);
         holder.tvName.setText(race.getName());
 
         holder.itemView.setOnClickListener(v -> listener.onRaceClick(race));
     }
 
     @Override
-    public int getItemCount() { return races != null ? races.size() : 0; }
+    public int getItemCount() {
+        return races != null ? races.size() : 0;
+    }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         final TextView tvFlag, tvName;
@@ -62,7 +73,7 @@ public class RaceAdapter extends RecyclerView.Adapter<RaceAdapter.ViewHolder> {
     }
 
     // ── Données exemple ──────────────────────────────────────────────
-    // TODO : remplacer par un appel au Repository / ViewModel
+    // (Vous pourrez supprimer cette méthode quand l'API gèrera tout)
     public static List<Race> getSampleRaces() {
         Race r1 = new Race();
         r1.setId(1); r1.setName("GP of Australia");

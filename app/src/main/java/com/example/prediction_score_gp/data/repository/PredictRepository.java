@@ -9,7 +9,9 @@ import java.util.Map;
 public class PredictRepository {
 
     public Call<Prediction> predict(int raceId, int driverId) {
-        Map<String, Integer> body = Map.of("race_id", raceId, "driver_id", driverId);
+        Map<String, Integer> body = new java.util.HashMap<>();
+        body.put("race_id", raceId);
+        body.put("driver_id", driverId);
         return RetrofitClient.getPredictApi().predict(body);
     }
 

@@ -4,32 +4,31 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.prediction_score_gp.R;
+import com.example.prediction_score_gp.data.model.Driver;
 import com.example.prediction_score_gp.data.model.Race;
-import com.example.prediction_score_gp.ui.BaseActivity;
 import com.example.prediction_score_gp.ui.dashboard.DashboardActivity;
 import com.example.prediction_score_gp.ui.profile.ProfileActivity;
 import com.example.prediction_score_gp.ui.standings.StandingsActivity;
-import com.example.prediction_score_gp.util.HapticHelper;
-import com.example.prediction_score_gp.util.SwipeNavigationHelper;
-import com.example.prediction_score_gp.viewmodel.DashboardViewModel;
 import com.example.prediction_score_gp.viewmodel.PredictionViewModel;
+import com.example.prediction_score_gp.viewmodel.RaceViewModel;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class PredictionActivity extends BaseActivity {
 
@@ -37,6 +36,15 @@ public class PredictionActivity extends BaseActivity {
     private DashboardViewModel dashboardViewModel;
     private PredictionViewModel predictionViewModel;
     private SwipeRefreshLayout swipeRefresh;
+
+    private PredictionViewModel predictionViewModel;
+    private RaceViewModel raceViewModel;
+    private RaceAdapter raceAdapter;
+
+    // --- Stockage en mémoire pour l'ouverture automatique ---
+    private List<Driver> availableDrivers = new ArrayList<>();
+    private List<Race> availableRaces = new ArrayList<>();
+    private int autoOpenRaceId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,20 +57,80 @@ public class PredictionActivity extends BaseActivity {
 
         setContentView(R.layout.activity_prediction);
 
+        // On récupère l'ID envoyé par le Globe
+        autoOpenRaceId = getIntent().getIntExtra("SELECTED_RACE_ID", -1);
+
+        predictionViewModel = new ViewModelProvider(this).get(PredictionViewModel.class);
+        raceViewModel = new ViewModelProvider(this).get(RaceViewModel.class);
+
         setupWindowInsets();
         setupRecyclerView();
-        setupViewModels();
-        setupSwipeRefresh();
         setupNavBar();
-        setupSwipeNavigation();
+        setupObservers();
 
-        // Charger les courses de la saison en cours
-        dashboardViewModel.loadRaces(2024);
+        // Lancement des requêtes simultanées
+        raceViewModel.loadRaces(2026);
+        predictionViewModel.loadDrivers();
     }
 
-    // ── WindowInsets ─────────────────────────────────────────────────
+    private void setupObservers() {
+        predictionViewModel.predictionLiveData.observe(this, prediction -> {
+            if (prediction != null) {
+                String resultat = "🏁 Position estimée : " + prediction.getPredictedPosition() +
+                        "\n🏆 Probabilité Podium : " + String.format("%.1f", prediction.getPodiumProbability() * 100) + "%";
+                Toast.makeText(this, resultat, Toast.LENGTH_LONG).show();
+            }
+        });
+
+        predictionViewModel.errorLiveData.observe(this, error -> {
+            if (error != null) {
+                Toast.makeText(this, "Erreur : " + error, Toast.LENGTH_LONG).show();
+            }
+        });
+
+        predictionViewModel.loadingLiveData.observe(this, isLoading -> {
+            if (isLoading != null && isLoading) {
+                Toast.makeText(this, "L'IA analyse les données...", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // 1. Quand les PILOTES arrivent
+        predictionViewModel.driversLiveData.observe(this, drivers -> {
+            if (drivers != null) {
+                this.availableDrivers = drivers;
+                tryAutoOpenSheet(); // On vérifie si on peut ouvrir le BottomSheet
+            }
+        });
+
+        // 2. Quand les COURSES arrivent
+        raceViewModel.racesLiveData.observe(this, allRaces -> {
+            if (allRaces != null) {
+                this.availableRaces = allRaces.stream()
+                        .filter(r -> r.getSeason() == 2026)
+                        .collect(Collectors.toList());
+
+                raceAdapter.updateRaces(this.availableRaces);
+                tryAutoOpenSheet(); // On vérifie si on peut ouvrir le BottomSheet
+            }
+        });
+    }
+
+    // Garantit que le BottomSheet ne s'ouvre que si prêt
+    private void tryAutoOpenSheet() {
+        // Si on a bien reçu une demande du globe (!= -1) ET que les deux listes API sont chargées
+        if (autoOpenRaceId != -1 && !availableDrivers.isEmpty() && !availableRaces.isEmpty()) {
+            for (Race r : availableRaces) {
+                if (r.getId() == autoOpenRaceId) {
+                    openRaceSheet(r); // On ouvre enfin la feuille !
+                    autoOpenRaceId = -1; // On détruit la demande pour ne pas la rouvrir en boucle
+                    break;
+                }
+            }
+        }
+    }
+
     private void setupWindowInsets() {
-        View rootLayout   = findViewById(R.id.rootLayout);
+        View rootLayout = findViewById(R.id.rootLayout);
         View statusSpacer = findViewById(R.id.statusBarSpacer);
         View navBarSpacer = findViewById(R.id.navBarSpacer);
 
@@ -80,126 +148,57 @@ public class PredictionActivity extends BaseActivity {
         });
     }
 
-    // ── RecyclerView ─────────────────────────────────────────────────
     private void setupRecyclerView() {
         RecyclerView rvRaces = findViewById(R.id.rvRaces);
         if (rvRaces == null) return;
-
-        raceAdapter = new RaceAdapter(new ArrayList<>(), this::openRaceSheet);
         rvRaces.setLayoutManager(new LinearLayoutManager(this));
+        raceAdapter = new RaceAdapter(new ArrayList<>(), this::openRaceSheet);
         rvRaces.setAdapter(raceAdapter);
     }
 
-    // ── SwipeRefreshLayout ───────────────────────────────────────────
-    private void setupSwipeRefresh() {
-        swipeRefresh = findViewById(R.id.swipeRefreshRaces);
-        if (swipeRefresh == null) return;
-        swipeRefresh.setColorSchemeColors(Color.parseColor("#FF3030"));
-        swipeRefresh.setProgressBackgroundColorSchemeColor(Color.parseColor("#1A1A1A"));
-        swipeRefresh.setOnRefreshListener(() -> {
-            HapticHelper.tap(swipeRefresh);
-            dashboardViewModel.loadRaces(2024);
-        });
-    }
-
-    // ── ViewModels ────────────────────────────────────────────────────
-    private void setupViewModels() {
-        dashboardViewModel  = new ViewModelProvider(this).get(DashboardViewModel.class);
-        predictionViewModel = new ViewModelProvider(this).get(PredictionViewModel.class);
-
-        dashboardViewModel.racesLiveData.observe(this, races -> {
-            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
-            if (races != null) raceAdapter.updateData(races);
-        });
-
-        dashboardViewModel.errorLiveData.observe(this, error -> {
-            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
-            if (error != null) Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
-        });
-
-        predictionViewModel.predictionLiveData.observe(this, prediction -> {
-            if (prediction != null) {
-                String msg = getString(R.string.prediction_result_format,
-                        prediction.getDriver(),
-                        prediction.getPredictedPosition(),
-                        Math.round(prediction.getPodiumProbability() * 100));
-                HapticHelper.confirm(findViewById(R.id.rootLayout));
-                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-            }
-        });
-
-        predictionViewModel.errorLiveData.observe(this, error -> {
-            if (error != null) Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
-        });
-    }
-
-    // ── Ouvrir le BottomSheet ────────────────────────────────────────
     private void openRaceSheet(Race race) {
-        HapticHelper.tap(findViewById(R.id.rootLayout));
         RaceBottomSheet sheet = RaceBottomSheet.newInstance(race);
+        sheet.setDrivers(availableDrivers);
 
-        sheet.setOnPredictListener((selectedRace, driverName) ->
-                predictionViewModel.predict(selectedRace.getId(), 0));
+        sheet.setOnPredictListener((selectedRace, driverId) -> {
+            predictionViewModel.predict(selectedRace.getId(), driverId);
+        });
 
         sheet.show(getSupportFragmentManager(), RaceBottomSheet.class.getSimpleName());
     }
 
-    // ── Navigation par swipe ──────────────────────────────────────────
-    private void setupSwipeNavigation() {
-        View rootLayout = findViewById(R.id.rootLayout);
-        SwipeNavigationHelper.attach(rootLayout, new SwipeNavigationHelper.OnSwipeCallback() {
-            @Override
-            public void onSwipeLeft() {   // → Podium (onglet suivant)
-                HapticHelper.tap(rootLayout);
-                startActivity(new Intent(PredictionActivity.this, StandingsActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-            }
-
-            @Override
-            public void onSwipeRight() { // → Globe (onglet précédent)
-                HapticHelper.tap(rootLayout);
-                startActivity(new Intent(PredictionActivity.this, DashboardActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-            }
-        });
-    }
-
-    // ── Navbar ───────────────────────────────────────────────────────
     private void setupNavBar() {
-        int activeColor   = Color.parseColor("#FF3030");
+        int activeColor = Color.parseColor("#FF3030");
         int inactiveColor = Color.parseColor("#888888");
 
         int[][] tabs = {
-                {R.id.tabGlobe,   R.id.iconGlobe,   R.id.labelGlobe},
-                {R.id.tabPredict, R.id.iconPredict,  R.id.labelPredict},
-                {R.id.tabPodium,  R.id.iconPodium,   R.id.labelPodium},
-                {R.id.tabDriver,  R.id.iconDriver,   R.id.labelDriver},
+                {R.id.tabGlobe, R.id.iconGlobe, R.id.labelGlobe},
+                {R.id.tabPredict, R.id.iconPredict, R.id.labelPredict},
+                {R.id.tabPodium, R.id.iconPodium, R.id.labelPodium},
+                {R.id.tabDriver, R.id.iconDriver, R.id.labelDriver},
         };
 
         ((ImageView) findViewById(R.id.iconPredict)).setColorFilter(activeColor);
-        ((TextView)  findViewById(R.id.labelPredict)).setTextColor(activeColor);
+        ((TextView) findViewById(R.id.labelPredict)).setTextColor(activeColor);
 
         for (int[] tab : tabs) {
             View tabView = findViewById(tab[0]);
             if (tabView == null) continue;
 
             tabView.setOnClickListener(v -> {
-                HapticHelper.tap(v);
                 if (tab[0] == R.id.tabPredict) return;
 
                 for (int[] t : tabs) {
                     ImageView img = findViewById(t[1]);
-                    TextView  txt = findViewById(t[2]);
+                    TextView txt = findViewById(t[2]);
                     if (img != null) img.setColorFilter(inactiveColor);
                     if (txt != null) txt.setTextColor(inactiveColor);
                 }
                 ((ImageView) findViewById(tab[1])).setColorFilter(activeColor);
-                ((TextView)  findViewById(tab[2])).setTextColor(activeColor);
+                ((TextView) findViewById(tab[2])).setTextColor(activeColor);
 
                 Class<?> target = null;
-                if (tab[0] == R.id.tabGlobe)  target = DashboardActivity.class;
+                if (tab[0] == R.id.tabGlobe) target = DashboardActivity.class;
                 if (tab[0] == R.id.tabPodium) target = StandingsActivity.class;
                 if (tab[0] == R.id.tabDriver) target = ProfileActivity.class;
 

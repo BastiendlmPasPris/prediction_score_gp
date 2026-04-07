@@ -1,22 +1,26 @@
 package com.example.prediction_score_gp.ui.auth;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.prediction_score_gp.R;
-import com.example.prediction_score_gp.data.local.SessionManager;
-import com.example.prediction_score_gp.ui.BaseActivity;
+import com.example.prediction_score_gp.data.api.RetrofitClient; // <--- AJOUTÉ
 import com.example.prediction_score_gp.ui.dashboard.DashboardActivity;
-import com.example.prediction_score_gp.util.HapticHelper;
 import com.example.prediction_score_gp.viewmodel.AuthViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 public class LoginActivity extends BaseActivity {
 
@@ -25,71 +29,119 @@ public class LoginActivity extends BaseActivity {
     private MaterialButton btnLogin;
     private ProgressBar progressBar;
 
+    private AuthViewModel viewModel;
+    private TextInputEditText etEmail, etPassword;
+    private TextInputLayout tilEmail, tilPassword;
+    private MaterialButton btnLogin;
+    private TextView tvError;
+    private ProgressBar progressBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Restaurer le token persisté et l'URL API dans RetrofitClient
-        SessionManager.restoreToken(this);
-
-        // Auto-login si session existante
-        if (SessionManager.hasSession(this)) {
-            goToDashboard();
-            return;
-        }
+        getWindow().setFlags(
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        );
 
         setContentView(R.layout.activity_login);
 
-        etEmail    = findViewById(R.id.etEmail);
-        etPassword = findViewById(R.id.etPassword);
-        btnLogin   = findViewById(R.id.btnLogin);
-        progressBar = findViewById(R.id.progressBar);
+        setupLogo();
+        bindViews();
+        setupViewModel();
+        setupClickListeners();
+    }
 
+    private void setupLogo() {
+        TextView tvLogo = findViewById(R.id.tvLogo);
+        SpannableString logo = new SpannableString("F1 PREDICT");
+        logo.setSpan(new ForegroundColorSpan(Color.parseColor("#FF3030")),
+                0, 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        logo.setSpan(new ForegroundColorSpan(Color.parseColor("#888888")),
+                2, 10, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        tvLogo.setText(logo);
+    }
+
+    private void bindViews() {
+        etEmail     = findViewById(R.id.etEmail);
+        etPassword  = findViewById(R.id.etPassword);
+        tilEmail    = findViewById(R.id.tilEmail);
+        tilPassword = findViewById(R.id.tilPassword);
+        btnLogin    = findViewById(R.id.btnLogin);
+        tvError     = findViewById(R.id.tvError);
+        progressBar = findViewById(R.id.progressBar);
+    }
+
+    private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
+        // Succès → TRANSMETTRE LE TOKEN + aller au Dashboard
         viewModel.userLiveData.observe(this, user -> {
-            if (user != null) {
-                SessionManager.save(this, user);
-                HapticHelper.confirm(btnLogin);
-                goToDashboard();
+            if (user != null && user.getToken() != null) {
+                // --- ÉTAPE CRUCIALE : On donne le token à Retrofit ---
+                RetrofitClient.setToken(user.getToken());
+
+                // On peut maintenant naviguer en toute sécurité
+                startActivity(new Intent(this, DashboardActivity.class));
+                finish();
             }
         });
 
         viewModel.errorLiveData.observe(this, error -> {
-            if (error != null) Toast.makeText(this, error, Toast.LENGTH_LONG).show();
-        });
-
-        viewModel.loadingLiveData.observe(this, loading -> {
-            if (loading == null) return;
-            btnLogin.setEnabled(!loading);
-            if (progressBar != null) progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
-        });
-
-        btnLogin.setOnClickListener(v -> {
-            HapticHelper.tap(v);
-            String email    = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
-            String password = etPassword.getText() != null ? etPassword.getText().toString().trim() : "";
-
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, getString(R.string.error_fill_all_fields), Toast.LENGTH_SHORT).show();
-                return;
+            if (error != null) {
+                tvError.setText(error);
+                tvError.setVisibility(View.VISIBLE);
+                tilEmail.setBoxStrokeColor(Color.parseColor("#FF3030"));
+                tilPassword.setBoxStrokeColor(Color.parseColor("#FF3030"));
             }
-            viewModel.login(email, password);
         });
 
-        TextView tvRegister = findViewById(R.id.tvRegister);
-        if (tvRegister != null) {
-            tvRegister.setOnClickListener(v -> {
-                HapticHelper.tap(v);
-                startActivity(new Intent(this, RegisterActivity.class));
-            });
-        }
+        viewModel.loadingLiveData.observe(this, isLoading -> {
+            if (progressBar != null) progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+            btnLogin.setEnabled(!isLoading);
+            btnLogin.setAlpha(isLoading ? 0.5f : 1f);
+        });
     }
 
-    private void goToDashboard() {
-        Intent intent = new Intent(this, DashboardActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
+    private void setupClickListeners() {
+        btnLogin.setOnClickListener(v -> attemptLogin());
+
+        findViewById(R.id.tvGoRegister).setOnClickListener(v -> {
+            startActivity(new Intent(this, RegisterActivity.class));
+            overridePendingTransition(0, 0);
+        });
+
+        etEmail.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) clearErrors();
+        });
+        etPassword.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) clearErrors();
+        });
+    }
+
+    private void attemptLogin() {
+        String email    = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
+        String password = etPassword.getText() != null ? etPassword.getText().toString() : "";
+
+        if (email.isEmpty()) {
+            tilEmail.setError("Email requis");
+            return;
+        }
+        if (password.isEmpty()) {
+            tilPassword.setError("Mot de passe requis");
+            return;
+        }
+
+        clearErrors();
+        viewModel.login(email, password);
+    }
+
+    private void clearErrors() {
+        tvError.setVisibility(View.GONE);
+        tilEmail.setError(null);
+        tilPassword.setError(null);
+        tilEmail.setBoxStrokeColor(Color.parseColor("#2A2A2A"));
+        tilPassword.setBoxStrokeColor(Color.parseColor("#2A2A2A"));
     }
 }

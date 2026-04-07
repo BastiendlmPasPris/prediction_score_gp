@@ -4,7 +4,6 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -12,87 +11,103 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.prediction_score_gp.R;
 import com.example.prediction_score_gp.data.model.Driver;
+import com.example.prediction_score_gp.data.model.Prediction;
+import com.example.prediction_score_gp.ui.prediction.RaceBottomSheet;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class StandingsAdapter extends RecyclerView.Adapter<StandingsAdapter.StandingViewHolder> {
+public class StandingsAdapter extends RecyclerView.Adapter<StandingsAdapter.ViewHolder> {
 
-    // ── Callback clic ────────────────────────────────────────────────
-    public interface OnDriverClickListener {
-        void onDriverClick(Driver driver, int position);
+    private List<Prediction> predictions = new ArrayList<>();
+    private List<Driver> allDrivers = new ArrayList<>();
+
+    private final OnItemClickListener listener;
+
+    public interface OnItemClickListener {
+        // Ajout de proba et position
+        void onItemClick(Driver driver, double proba, int position);
     }
 
-    private List<Driver> driverList;
-    private final OnDriverClickListener listener;
-
-    public StandingsAdapter(List<Driver> driverList, OnDriverClickListener listener) {
-        this.driverList = driverList;
-        this.listener   = listener;
+    public StandingsAdapter(OnItemClickListener listener) {
+        this.listener = listener;
     }
 
-    public void updateData(List<Driver> newList) {
-        this.driverList = newList;
+    public void updateData(List<Prediction> newPredictions, List<Driver> drivers) {
+        this.predictions = newPredictions;
+        this.allDrivers = drivers;
         notifyDataSetChanged();
     }
 
-    @NonNull @Override
-    public StandingViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_standing, parent, false);
-        return new StandingViewHolder(view);
+        return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull StandingViewHolder holder, int position) {
-        Driver driver = driverList.get(position);
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        Prediction prediction = predictions.get(position);
 
-        holder.tvPosition.setText(String.valueOf(position + 1));
+        int realPosition = position + 4;
+        holder.tvPosition.setText(String.valueOf(realPosition));
 
-        String displayName = driver.getFirstName().charAt(0) + ". " + driver.getLastName();
-        holder.tvName.setText(displayName);
+        holder.tvProba.setText(String.format("%.1f%%", prediction.getPodiumProbability() * 100));
 
-        holder.tvTeam.setText(driver.getTeam() != null ? driver.getTeam() : "");
+        Driver driver = null;
+        String predictedName = prediction.getDriver();
 
-        int probaPercent = (int) Math.round(driver.getPodiumProbability() * 100);
-        holder.tvProba.setText(probaPercent + "%");
+        if (predictedName != null && !predictedName.isEmpty()) {
+            String lowerPredictedName = predictedName.toLowerCase();
+            for (Driver d : allDrivers) {
+                if (d.getLastName() != null && lowerPredictedName.contains(d.getLastName().toLowerCase())) {
+                    driver = d;
+                    break;
+                }
+            }
+        }
 
-        holder.imgDriver.setImageResource(android.R.drawable.ic_menu_gallery);
-        // TODO : Glide.with(holder.imgDriver).load(driver.getPhotoUrl()).into(holder.imgDriver);
+        final Driver finalDriver = driver; // Nécessaire pour le clic
 
-        holder.tvPosition.setTextColor(positionColor(position));
+        if (finalDriver != null) {
+            String flag = RaceBottomSheet.getFlagEmoji(finalDriver.getNationality());
+            holder.tvName.setText(flag + " " + finalDriver.getFirstName().charAt(0) + ". " + finalDriver.getLastName());
+            holder.tvTeam.setText(finalDriver.getTeam());
+            holder.colorBar.setBackgroundColor(StandingsActivity.getTeamColor(finalDriver.getTeam()));
 
-        // ── Clic → bottom sheet ──────────────────────────────────────
-        holder.itemView.setOnClickListener(v -> listener.onDriverClick(driver, position));
+            holder.itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    // On envoie la probabilité et la vraie position
+                    listener.onItemClick(finalDriver, prediction.getPodiumProbability(), realPosition);
+                }
+            });
+
+        } else {
+            holder.tvName.setText(predictedName != null ? predictedName : "Inconnu");
+            holder.tvTeam.setText("—");
+            holder.colorBar.setBackgroundColor(android.graphics.Color.GRAY);
+            holder.itemView.setOnClickListener(null); // Pas de clic si pilote inconnu
+        }
     }
 
     @Override
     public int getItemCount() {
-        return driverList != null ? driverList.size() : 0;
+        return predictions.size();
     }
 
-    private int positionColor(int position) {
-        switch (position) {
-            case 0:  return Color.parseColor("#FFD700");
-            case 1:  return Color.parseColor("#C0C0C0");
-            case 2:  return Color.parseColor("#CD7F32");
-            default: return Color.parseColor("#888888");
-        }
-    }
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView tvPosition, tvName, tvTeam, tvProba;
+        View colorBar;
 
-    public static class StandingViewHolder extends RecyclerView.ViewHolder {
-        final TextView  tvPosition;
-        final TextView  tvName;
-        final TextView  tvTeam;
-        final TextView  tvProba;
-        final ImageView imgDriver;
-
-        public StandingViewHolder(@NonNull View itemView) {
+        public ViewHolder(View itemView) {
             super(itemView);
-            tvPosition = itemView.findViewById(R.id.tvPosition);
-            tvName     = itemView.findViewById(R.id.tvDriverName);
-            tvTeam     = itemView.findViewById(R.id.tvTeam);
-            tvProba    = itemView.findViewById(R.id.tvPodiumProba);
-            imgDriver  = itemView.findViewById(R.id.imgDriver);
+            tvPosition = itemView.findViewById(R.id.itemPosition);
+            tvName = itemView.findViewById(R.id.itemName);
+            tvTeam = itemView.findViewById(R.id.itemTeam);
+            tvProba = itemView.findViewById(R.id.itemProba);
+            colorBar = itemView.findViewById(R.id.itemTeamColor);
         }
     }
 }

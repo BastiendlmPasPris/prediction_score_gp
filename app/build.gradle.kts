@@ -40,9 +40,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    // Accélération matérielle activée globalement
     buildFeatures {
         viewBinding = true
-        buildConfig  = true   // nécessaire pour BuildConfig.API_BASE_URL
     }
     packaging {
         jniLibs {
@@ -82,4 +82,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+
+
 }

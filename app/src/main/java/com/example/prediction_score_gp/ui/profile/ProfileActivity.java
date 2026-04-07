@@ -10,29 +10,17 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.prediction_score_gp.R;
-import com.example.prediction_score_gp.data.local.SessionManager;
-import com.example.prediction_score_gp.data.model.User;
-import com.example.prediction_score_gp.ui.BaseActivity;
-import com.example.prediction_score_gp.ui.auth.LoginActivity;
 import com.example.prediction_score_gp.ui.dashboard.DashboardActivity;
 import com.example.prediction_score_gp.ui.prediction.PredictionActivity;
 import com.example.prediction_score_gp.ui.standings.StandingsActivity;
-import com.example.prediction_score_gp.util.HapticHelper;
-import com.example.prediction_score_gp.util.LocaleHelper;
-import com.example.prediction_score_gp.util.SwipeNavigationHelper;
-import com.example.prediction_score_gp.viewmodel.PredictionViewModel;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
-
-public class ProfileActivity extends BaseActivity {
 
     private TextView tvUsername, tvEmail, tvRole;
     private PredictionViewModel predictionViewModel;
@@ -42,10 +30,14 @@ public class ProfileActivity extends BaseActivity {
     private MaterialButton btnLangEn, btnLangFr;
     private TextInputEditText etApiUrl;
 
+    private TextView tvUsername, tvEmail, tvRole;
+    private View userCard;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Mode plein écran pour l'immersion
         getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
@@ -53,43 +45,35 @@ public class ProfileActivity extends BaseActivity {
 
         setContentView(R.layout.activity_profile);
 
-        setupWindowInsets();
-
+        // 1. Initialisation des Vues
+        userCard = findViewById(R.id.userCard);
         tvUsername = findViewById(R.id.tvUsername);
-        tvEmail    = findViewById(R.id.tvEmail);
-        tvRole     = findViewById(R.id.tvRole);
+        tvEmail = findViewById(R.id.tvEmail);
+        tvRole = findViewById(R.id.tvRole);
 
-        View btnLogout = findViewById(R.id.btnLogout);
-        if (btnLogout != null) btnLogout.setOnClickListener(v -> {
-            HapticHelper.tap(v);
-            logoutUser();
-        });
+        // 2. Configuration des interactions
+        findViewById(R.id.btnLogout).setOnClickListener(v -> logoutUser());
 
-        loadUserProfile();
-        setupHistoryRecyclerView();
-        setupLanguageToggle();
-        setupApiUrlSettings();
+        // 3. Setup des composants
+        setupWindowInsets();
+        loadUserData();
+        setupHistoryList();
         setupNavBar();
-        setupSwipeNavigation();
 
-        predictionViewModel = new ViewModelProvider(this).get(PredictionViewModel.class);
-        predictionViewModel.standingsLiveData.observe(this, predictions -> {
-            if (predictions != null && historyAdapter != null) {
-                historyAdapter.updateData(predictions);
-            }
-        });
-        predictionViewModel.errorLiveData.observe(this, error -> {
-            if (error != null) Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
-        });
+        // 4. Petite animation d'apparition
+        userCard.setAlpha(0f);
+        userCard.setTranslationY(20f);
+        userCard.animate().alpha(1f).translationY(0f).setDuration(500).start();
     }
 
     private void setupWindowInsets() {
-        View rootLayout   = findViewById(R.id.rootLayout);
+        View rootLayout = findViewById(R.id.rootLayout);
         View statusSpacer = findViewById(R.id.statusBarSpacer);
         View navBarSpacer = findViewById(R.id.navBarSpacer);
 
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
             Insets sysBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
             if (statusSpacer != null) {
                 ViewGroup.LayoutParams spTop = statusSpacer.getLayoutParams();
                 spTop.height = sysBars.top;
@@ -104,115 +88,51 @@ public class ProfileActivity extends BaseActivity {
         });
     }
 
-    private void loadUserProfile() {
-        User user = SessionManager.getUser(this);
-        if (user == null) return;
+    private void loadUserData() {
+        // On récupère le fichier de sauvegarde nommé "UserPrefs"
+        android.content.SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
 
-        if (tvUsername != null) tvUsername.setText(user.getUsername());
-        if (tvEmail    != null) tvEmail.setText(user.getEmail());
-        if (tvRole     != null) tvRole.setText(user.getRole().toUpperCase());
+        // On extrait les valeurs. Si elles n'existent pas, on met une valeur par défaut ("—")
+        String username = prefs.getString("username", "Guest");
+        String email    = prefs.getString("email", "not_connected@f1.com");
+        String role     = prefs.getString("role", "MEMBER");
+
+        // Mise à jour de l'interface
+        tvUsername.setText(username);
+        tvEmail.setText(email);
+        tvRole.setText(role.toUpperCase());
+
+        // Optionnel : Changer la couleur du badge selon le rôle
+        if (role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("analyst")) {
+            tvRole.setTextColor(Color.parseColor("#FFD700")); // Or pour les VIP
+            tvRole.setBackgroundColor(Color.parseColor("#26FFD700"));
+        }
     }
 
-    private void setupHistoryRecyclerView() {
+    private void setupHistoryList() {
         RecyclerView rvHistory = findViewById(R.id.rvHistory);
-        if (rvHistory == null) return;
-
-        historyAdapter = new HistoryAdapter();
-        rvHistory.setLayoutManager(new LinearLayoutManager(this));
-        rvHistory.setAdapter(historyAdapter);
-    }
-
-    // ── Sélecteur de langue ──────────────────────────────────────────
-    private void setupLanguageToggle() {
-        btnLangEn = findViewById(R.id.btnLangEn);
-        btnLangFr = findViewById(R.id.btnLangFr);
-        if (btnLangEn == null || btnLangFr == null) return;
-
-        // Afficher la sélection courante
-        String currentLang = LocaleHelper.getLanguage(this);
-        updateLangButtons(currentLang);
-
-        btnLangEn.setOnClickListener(v -> {
-            HapticHelper.confirm(v);
-            LocaleHelper.setLanguage(this, LocaleHelper.LANG_EN);
-            recreate(); // recharge l'Activity avec la nouvelle locale
-        });
-
-        btnLangFr.setOnClickListener(v -> {
-            HapticHelper.confirm(v);
-            LocaleHelper.setLanguage(this, LocaleHelper.LANG_FR);
-            recreate();
-        });
-    }
-
-    private void updateLangButtons(String activeLang) {
-        if (btnLangEn == null || btnLangFr == null) return;
-        boolean isEn = LocaleHelper.LANG_EN.equals(activeLang);
-
-        btnLangEn.setBackgroundTintList(
-                isEn ? android.content.res.ColorStateList.valueOf(Color.parseColor("#FF3030"))
-                     : android.content.res.ColorStateList.valueOf(Color.parseColor("#1A1A1A")));
-        btnLangEn.setTextColor(isEn ? Color.WHITE : Color.parseColor("#888888"));
-
-        btnLangFr.setBackgroundTintList(
-                !isEn ? android.content.res.ColorStateList.valueOf(Color.parseColor("#FF3030"))
-                      : android.content.res.ColorStateList.valueOf(Color.parseColor("#1A1A1A")));
-        btnLangFr.setTextColor(!isEn ? Color.WHITE : Color.parseColor("#888888"));
-    }
-
-    // ── URL API configurable ─────────────────────────────────────────
-    private void setupApiUrlSettings() {
-        etApiUrl = findViewById(R.id.etApiUrl);
-        MaterialButton btnSaveUrl = findViewById(R.id.btnSaveUrl);
-        if (etApiUrl == null || btnSaveUrl == null) return;
-
-        // Pré-remplir avec l'URL actuelle
-        etApiUrl.setText(SessionManager.getApiUrl(this));
-
-        btnSaveUrl.setOnClickListener(v -> {
-            HapticHelper.confirm(v);
-            String url = etApiUrl.getText() != null
-                    ? etApiUrl.getText().toString().trim()
-                    : "";
-
-            if (url.isEmpty() || (!url.startsWith("http://") && !url.startsWith("https://"))) {
-                Toast.makeText(this, getString(R.string.msg_url_invalid), Toast.LENGTH_SHORT).show();
-                return;
-            }
-            SessionManager.setApiUrl(this, url);
-            Toast.makeText(this, getString(R.string.msg_url_saved), Toast.LENGTH_LONG).show();
-        });
+        if (rvHistory != null) {
+            rvHistory.setLayoutManager(new LinearLayoutManager(this));
+            // Ici tu pourras attacher ton HistoryAdapter quand il sera prêt
+            // rvHistory.setAdapter(new HistoryAdapter(data));
+        }
     }
 
     private void logoutUser() {
-        SessionManager.clear(this);
+
+        Toast.makeText(this, "Déconnexion en cours...", Toast.LENGTH_SHORT).show();
+
+        // Redirection vers Login (à décommenter quand tu auras LoginActivity)
+        /*
         Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
-    }
-
-    // ── Navigation par swipe ──────────────────────────────────────────
-    private void setupSwipeNavigation() {
-        View rootLayout = findViewById(R.id.rootLayout);
-        SwipeNavigationHelper.attach(rootLayout, new SwipeNavigationHelper.OnSwipeCallback() {
-            @Override
-            public void onSwipeLeft() {  // pas d'onglet suivant après Driver
-                HapticHelper.tap(rootLayout);
-            }
-
-            @Override
-            public void onSwipeRight() { // → Podium (onglet précédent)
-                HapticHelper.tap(rootLayout);
-                startActivity(new Intent(ProfileActivity.this, StandingsActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-            }
-        });
+        */
     }
 
     private void setupNavBar() {
-        int activeColor   = Color.parseColor("#FF3030");
+        int activeColor = Color.parseColor("#FF3030");
         int inactiveColor = Color.parseColor("#888888");
 
         int[][] tabs = {
@@ -222,36 +142,23 @@ public class ProfileActivity extends BaseActivity {
                 {R.id.tabDriver,  R.id.iconDriver,   R.id.labelDriver},
         };
 
-        ImageView iconDriver = findViewById(R.id.iconDriver);
-        TextView  labelDriver = findViewById(R.id.labelDriver);
-        if (iconDriver  != null) iconDriver.setColorFilter(activeColor);
-        if (labelDriver != null) labelDriver.setTextColor(activeColor);
-
         for (int[] tab : tabs) {
             View tabView = findViewById(tab[0]);
             if (tabView == null) continue;
 
             tabView.setOnClickListener(v -> {
-                HapticHelper.tap(v);
+                // On ne fait rien si on est déjà sur la page Driver
                 if (tab[0] == R.id.tabDriver) return;
 
-                for (int[] t : tabs) {
-                    ImageView img = findViewById(t[1]);
-                    TextView  txt = findViewById(t[2]);
-                    if (img != null) img.setColorFilter(inactiveColor);
-                    if (txt != null) txt.setTextColor(inactiveColor);
-                }
-                ((ImageView) findViewById(tab[1])).setColorFilter(activeColor);
-                ((TextView)  findViewById(tab[2])).setTextColor(activeColor);
+                Class<?> target = null;
+                if (tab[0] == R.id.tabGlobe) target = DashboardActivity.class;
+                else if (tab[0] == R.id.tabPredict) target = PredictionActivity.class;
+                else if (tab[0] == R.id.tabPodium) target = StandingsActivity.class;
 
-                Intent intent = null;
-                if (tab[0] == R.id.tabGlobe)   intent = new Intent(this, DashboardActivity.class);
-                if (tab[0] == R.id.tabPredict)  intent = new Intent(this, PredictionActivity.class);
-                if (tab[0] == R.id.tabPodium)   intent = new Intent(this, StandingsActivity.class);
-
-                if (intent != null) {
+                if (target != null) {
+                    Intent intent = new Intent(this, target);
                     startActivity(intent);
-                    overridePendingTransition(0, 0);
+                    overridePendingTransition(0, 0); // Transition fluide pour la nav bar
                     finish();
                 }
             });
